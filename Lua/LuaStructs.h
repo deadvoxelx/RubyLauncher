@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Cactus.ModLoader/Registry/IDs.h"
+#include "Registry/IDs.h"
 
 struct LuaVec3 {
     double x, y, z;

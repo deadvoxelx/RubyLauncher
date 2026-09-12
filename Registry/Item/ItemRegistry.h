@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-#include "Minecraft.Client/Utils/StringTable.h"
+#include "StringTable.h"
 
 struct ItemDefinition;
 

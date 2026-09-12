@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Minecraft.Client/Textures/Stitching/StitchedTexture.h"
-#include "Minecraft.World/Util/Icon.h"
-#include "Minecraft.World/Blocks/Tile.h"
+#include "StitchedTexture.h"
+#include "Icon.h"
+#include "Tile.h"
 
 #include "Rendering/ModTextureAtlas.h"
 
@@ -10,14 +10,7 @@ class ModTile : public Tile {
     std::wstring m_modTextureName;
 
 public:
-    ModTile(int id, Material* material, const std::wstring& modTextureName) : Tile(id, material), m_modTextureName(modTextureName) {}
-
-    int getIconType() const override {
-        if (ModTextureAtlas::getInstance() && ModTextureAtlas::getInstance()->isStitchedToTerrain()) {
-            return Icon::TYPE_TERRAIN;
-        }
-        return Icon::TYPE_MOD_TILE;
-    }
+    ModTile(int id, Material* material, const std::wstring& modTextureName) : Tile(id, material, true), m_modTextureName(modTextureName) {}
 
     Icon* getTexture(int face) override {
         if (!ModTextureAtlas::getInstance()) return nullptr;

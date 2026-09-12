@@ -2,18 +2,18 @@
 
 #include <unordered_map>
 
-#include "Minecraft.Assets/DurangoMedia/loc/strings.h"
-#include "Minecraft.World/Blocks/Tile.h"
-#include "Minecraft.World/Items/TileItems/TileItem.h"
-#include "Minecraft.World/Items/Item.h"
-#include "Minecraft.World/Blocks/Material.h"
+#include "DurangoMedia/loc/strings.h"
+#include "Tile.h"
+#include "TileItem.h"
+#include "Item.h"
+#include "Material.h"
 
 #include "Client/Rendering/ModTextureAtlas.h"
 #include "Registry/Item/ItemRegistry.h"
 #include "Client/ModTile.h"
 #include "Registry/IDs.h"
 
-int itemIdMax = 171;
+int itemIdMax = 173;
 
 int BlockRegistry::nextItemId() {
     itemIdMax += 1;
@@ -58,15 +58,15 @@ int BlockRegistry::registerBlock(const std::wstring& path, const std::string& id
             Tile::tiles[itemId]->setUseDescriptionId(IDS_DESC_STICK);
 
             Item::items[itemId] = (new TileItem(itemId - 256))
-                ->setTextureName(wname)
+                ->setIconName(wname)
                 ->handEquipped()
                 ->setDescriptionId(nameId)
                 ->setUseDescriptionId(IDS_DESC_STICK);
 
             IDMapping::get()->add(modId,id,true,itemId);
         } else {
-            (new Tile(itemId, Material::grass, true))->setTextureName(L"dirt")->setDescriptionId(nameId)->setUseDescriptionId(IDS_DESC_ANVIL);
-            Item::items[itemId] = (new TileItem(itemId-256))->setTextureName(L"stick")->handEquipped()->setDescriptionId(nameId)->setUseDescriptionId(IDS_DESC_STICK);
+            new ModTile(itemId, Material::grass, L"dirt");
+            Item::items[itemId] = (new TileItem(itemId-256))->setIconName(L"stick")->handEquipped()->setDescriptionId(nameId)->setUseDescriptionId(IDS_DESC_STICK);
         }
     }
 

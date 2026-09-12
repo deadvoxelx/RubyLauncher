@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Minecraft.World/Items/TileItems/WaterLilyTileItem.h"
-#include "Minecraft.World/Items/TileItems/PlanterTileItem.h"
-#include "Minecraft.World/Items/TileItems/SkullItem.h"
-#include "Minecraft.World/Items/TileItems/TileItem.h"
-#include "Minecraft.World/Items/SignItem.h"
-#include "Minecraft.World/Items/DoorItem.h"
-#include "Minecraft.World/Items/BedItem.h"
+#include "WaterLilyTileItem.h"
+#include "TilePlanterItem.h"
+#include "SkullItem.h"
+#include "TileItem.h"
+#include "SignItem.h"
+#include "DoorItem.h"
+#include "BedItem.h"
 
 class Item;
 

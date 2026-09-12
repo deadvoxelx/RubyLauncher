@@ -1,5 +1,6 @@
 #pragma once
 
+class ServerPlayer;
 #include "Common/EventSystem/CactusEvent.h"
 
 struct PlayerFlightEndedEvent final : public CactusEvent {

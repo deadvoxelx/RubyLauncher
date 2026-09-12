@@ -4442,10 +4442,10 @@ extern "C" {
 
 namespace sol {
 
-	template <typename Allocator = std::allocator<std::byte>>
-	class basic_bytecode : private std::vector<std::byte, Allocator> {
+	template <typename Allocator = std::allocator<unsigned char>>
+	class basic_bytecode : private std::vector<unsigned char, Allocator> {
 	private:
-		using base_t = std::vector<std::byte, Allocator>;
+		using base_t = std::vector<unsigned char, Allocator>;
 
 	public:
 		using typename base_t::allocator_type;
@@ -4506,7 +4506,7 @@ namespace sol {
 	template <typename Container>
 	inline int basic_insert_dump_writer(lua_State*, const void* memory, size_t memory_size, void* userdata_pointer) {
 		using storage_t = Container;
-		const std::byte* p_code = static_cast<const std::byte*>(memory);
+		const unsigned char* p_code = static_cast<const unsigned char*>(memory);
 		storage_t& bc = *static_cast<storage_t*>(userdata_pointer);
 #if SOL_IS_OFF(SOL_EXCEPTIONS)
 		bc.insert(bc.cend(), p_code, p_code + memory_size);
@@ -27785,7 +27785,7 @@ namespace sol {
 		}
 
 		load_result load_buffer(
-		     const std::byte* buff, size_t size, const std::string& chunkname = detail::default_chunk_name(), load_mode mode = load_mode::any) {
+		     const unsigned char* buff, size_t size, const std::string& chunkname = detail::default_chunk_name(), load_mode mode = load_mode::any) {
 			return load(string_view(reinterpret_cast<const char*>(buff), size), chunkname, mode);
 		}
 

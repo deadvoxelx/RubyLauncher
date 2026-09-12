@@ -1,5 +1,6 @@
 #pragma once
 
+class ServerPlayer;
 #include "Common/EventSystem/CactusEvent.h"
 #include "Lua/LuaStructs.h"
 

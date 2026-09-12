@@ -1,6 +1,6 @@
 #include "IDs.h"
-#include "Minecraft.World/Items/Item.h"
-#include "Minecraft.World/Blocks/Tile.h"
+#include "Item.h"
+#include "Tile.h"
 
 IDMapping* IDMapping::get() {
     static IDMapping instance;
@@ -69,7 +69,7 @@ void IDMapping::init() {
     #define ADD_ITEM(key, iid, av) stringToID["minecraft:" key] = { iid, false, av };
 
     /* Blocks */
-    ADD_BLOCK("stone", Tile::rock_Id, 0);
+    ADD_BLOCK("stone", Tile::stone_Id, 0);
     ADD_BLOCK("grass_block", Tile::grass_Id, 0);
     ADD_BLOCK("dirt", Tile::dirt_Id, 0);
     ADD_BLOCK("cobblestone", Tile::stoneBrick_Id, 0);
@@ -107,7 +107,7 @@ void IDMapping::init() {
     ADD_BLOCK("sandstone", Tile::sandStone_Id, 0);
     ADD_BLOCK("chiseled_sandstone", Tile::sandStone_Id, 1);
     ADD_BLOCK("cut_sandstone", Tile::sandStone_Id, 2);
-    ADD_BLOCK("note_block", Tile::musicBlock_Id, 0);
+    ADD_BLOCK("note_block", Tile::noteblock_Id, 0);
     ADD_BLOCK("bed", Tile::bed_Id, 0);
     ADD_BLOCK("golden_rail", Tile::goldenRail_Id, 0);
     ADD_BLOCK("detector_rail", Tile::detectorRail_Id, 0);
@@ -119,27 +119,27 @@ void IDMapping::init() {
     // ADD_BLOCK("dead_bush", Tile::deadBush_Id, 0); // no clue what this is but you can't place it down so
     ADD_BLOCK("piston", Tile::pistonBase_Id, 0);
     ADD_BLOCK("piston_head", Tile::pistonExtensionPiece_Id, 0);
-    ADD_BLOCK("white_wool", Tile::cloth_Id, 0);
-    ADD_BLOCK("orange_wool", Tile::cloth_Id, 1);
-    ADD_BLOCK("magenta_wool", Tile::cloth_Id, 2);
-    ADD_BLOCK("light_blue_wool", Tile::cloth_Id, 3);
-    ADD_BLOCK("yellow_wool", Tile::cloth_Id, 4);
-    ADD_BLOCK("lime_wool", Tile::cloth_Id, 5);
-    ADD_BLOCK("pink_wool", Tile::cloth_Id, 6);
-    ADD_BLOCK("gray_wool", Tile::cloth_Id, 7);
-    ADD_BLOCK("light_gray_wool", Tile::cloth_Id, 8);
-    ADD_BLOCK("cyan_wool", Tile::cloth_Id, 9);
-    ADD_BLOCK("purple_wool", Tile::cloth_Id, 10);
-    ADD_BLOCK("blue_wool", Tile::cloth_Id, 11);
-    ADD_BLOCK("brown_wool", Tile::cloth_Id, 12);
-    ADD_BLOCK("green_wool", Tile::cloth_Id, 13);
-    ADD_BLOCK("red_wool", Tile::cloth_Id, 14);
-    ADD_BLOCK("black_wool", Tile::cloth_Id, 15);
+    ADD_BLOCK("white_wool", Tile::wool_Id, 0);
+    ADD_BLOCK("orange_wool", Tile::wool_Id, 1);
+    ADD_BLOCK("magenta_wool", Tile::wool_Id, 2);
+    ADD_BLOCK("light_blue_wool", Tile::wool_Id, 3);
+    ADD_BLOCK("yellow_wool", Tile::wool_Id, 4);
+    ADD_BLOCK("lime_wool", Tile::wool_Id, 5);
+    ADD_BLOCK("pink_wool", Tile::wool_Id, 6);
+    ADD_BLOCK("gray_wool", Tile::wool_Id, 7);
+    ADD_BLOCK("light_gray_wool", Tile::wool_Id, 8);
+    ADD_BLOCK("cyan_wool", Tile::wool_Id, 9);
+    ADD_BLOCK("purple_wool", Tile::wool_Id, 10);
+    ADD_BLOCK("blue_wool", Tile::wool_Id, 11);
+    ADD_BLOCK("brown_wool", Tile::wool_Id, 12);
+    ADD_BLOCK("green_wool", Tile::wool_Id, 13);
+    ADD_BLOCK("red_wool", Tile::wool_Id, 14);
+    ADD_BLOCK("black_wool", Tile::wool_Id, 15);
     // ADD_BLOCK("piston_moving_piece", Tile::pistonMovingPiece_Id, 0);
     ADD_BLOCK("yellow_flower", Tile::flower_Id, 0);
     ADD_BLOCK("red_flower", Tile::rose_Id, 0);
-    ADD_BLOCK("brown_mushroom", Tile::mushroom1_Id, 0);
-    ADD_BLOCK("red_mushroom", Tile::mushroom2_Id, 0);
+    ADD_BLOCK("brown_mushroom", Tile::mushroom_brown_Id, 0);
+    ADD_BLOCK("red_mushroom", Tile::mushroom_red_Id, 0);
     ADD_BLOCK("gold_block", Tile::goldBlock_Id, 0);
     ADD_BLOCK("iron_block", Tile::ironBlock_Id, 0);
     ADD_BLOCK("double_stone_slab", Tile::stoneSlab_Id, 0);
@@ -161,7 +161,7 @@ void IDMapping::init() {
     ADD_BLOCK("brick_block", Tile::redBrick_Id, 0);
     ADD_BLOCK("tnt", Tile::tnt_Id, 0);
     ADD_BLOCK("bookshelf", Tile::bookshelf_Id, 0);
-    ADD_BLOCK("mossy_cobblestone", Tile::mossStone_Id, 0);
+    ADD_BLOCK("mossy_cobblestone", Tile::mossyCobblestone_Id, 0);
     ADD_BLOCK("obsidian", Tile::obsidian_Id, 0);
     ADD_BLOCK("torch", Tile::torch_Id, 0);
     ADD_BLOCK("fire", Tile::fire_Id, 0);
@@ -172,7 +172,7 @@ void IDMapping::init() {
     ADD_BLOCK("diamond_ore", Tile::diamondOre_Id, 0);
     ADD_BLOCK("diamond_block", Tile::diamondBlock_Id, 0);
     ADD_BLOCK("crafting_table", Tile::workBench_Id, 0);
-    ADD_BLOCK("wheat", Tile::crops_Id, 0);
+    ADD_BLOCK("wheat", Tile::wheat_Id, 0);
     ADD_BLOCK("farmland", Tile::farmland_Id, 0);
     ADD_BLOCK("furnace", Tile::furnace_Id, 0);
     ADD_BLOCK("lit_furnace", Tile::furnace_lit_Id, 0);
@@ -188,8 +188,8 @@ void IDMapping::init() {
     ADD_BLOCK("wooden_pressure_plate", Tile::pressurePlate_wood_Id, 0);
     ADD_BLOCK("redstone_ore", Tile::redStoneOre_Id, 0);
     ADD_BLOCK("lit_redstone_ore", Tile::redStoneOre_lit_Id, 0);
-    ADD_BLOCK("unlit_redstone_torch", Tile::notGate_off_Id, 0);
-    ADD_BLOCK("redstone_torch", Tile::notGate_on_Id, 0);
+    ADD_BLOCK("unlit_redstone_torch", Tile::redstoneTorch_off_Id, 0);
+    ADD_BLOCK("redstone_torch", Tile::redstoneTorch_on_Id, 0);
     ADD_BLOCK("stone_button", Tile::button_stone_Id, 0);
     ADD_BLOCK("snow_layer", Tile::topSnow_Id, 0);
     ADD_BLOCK("ice", Tile::ice_Id, 0);
@@ -197,26 +197,26 @@ void IDMapping::init() {
     ADD_BLOCK("cactus", Tile::cactus_Id, 0);
     ADD_BLOCK("clay", Tile::clay_Id, 0);
     ADD_BLOCK("reeds", Tile::reeds_Id, 0);
-    ADD_BLOCK("jukebox", Tile::recordPlayer_Id, 0);
+    ADD_BLOCK("jukebox", Tile::jukebox_Id, 0);
     ADD_BLOCK("fence", Tile::fence_Id, 0);
     ADD_BLOCK("pumpkin", Tile::pumpkin_Id, 0);
-    ADD_BLOCK("netherrack", Tile::hellRock_Id, 0);
-    ADD_BLOCK("soul_sand", Tile::hellSand_Id, 0);
-    ADD_BLOCK("glowstone", Tile::lightGem_Id, 0);
+    ADD_BLOCK("netherrack", Tile::netherRack_Id, 0);
+    ADD_BLOCK("soul_sand", Tile::soulsand_Id, 0);
+    ADD_BLOCK("glowstone", Tile::glowstone_Id, 0);
     ADD_BLOCK("portal", Tile::portalTile_Id, 0);
     ADD_BLOCK("lit_pumpkin", Tile::litPumpkin_Id, 0);
     ADD_BLOCK("cake", Tile::cake_Id, 0);
     ADD_BLOCK("unpowered_repeater", Tile::diode_off_Id, 0);
     ADD_BLOCK("powered_repeater", Tile::diode_on_Id, 0);
-    ADD_BLOCK("stained_glass", Tile::aprilFoolsJoke_Id, 0);
+    ADD_BLOCK("stained_glass", Tile::stained_glass_Id, 0);
     ADD_BLOCK("trapdoor", Tile::trapdoor_Id, 0);
     ADD_BLOCK("monster_egg", Tile::monsterStoneEgg_Id, 0);
-    ADD_BLOCK("stone_bricks", Tile::stoneBrickSmooth_Id, 0);
-    ADD_BLOCK("mossy_stone_bricks", Tile::stoneBrickSmooth_Id, 1);
-    ADD_BLOCK("cracked_stone_bricks", Tile::stoneBrickSmooth_Id, 2);
-    ADD_BLOCK("chiseled_stone_bricks", Tile::stoneBrickSmooth_Id, 3);
-    ADD_BLOCK("brown_mushroom_block", Tile::hugeMushroom1_Id, 0);
-    ADD_BLOCK("red_mushroom_block", Tile::hugeMushroom2_Id, 0);
+    ADD_BLOCK("stone_bricks", Tile::stoneBrick_Id, 0);
+    ADD_BLOCK("mossy_stone_bricks", Tile::stoneBrick_Id, 1);
+    ADD_BLOCK("cracked_stone_bricks", Tile::stoneBrick_Id, 2);
+    ADD_BLOCK("chiseled_stone_bricks", Tile::stoneBrick_Id, 3);
+    ADD_BLOCK("brown_mushroom_block", Tile::hugeMushroom_brown_Id, 0);
+    ADD_BLOCK("red_mushroom_block", Tile::hugeMushroom_red_Id, 0);
     ADD_BLOCK("iron_bars", Tile::ironFence_Id, 0);
     ADD_BLOCK("glass_pane", Tile::thinGlass_Id, 0);
     ADD_BLOCK("melon_block", Tile::melon_Id, 0);
@@ -225,7 +225,7 @@ void IDMapping::init() {
     ADD_BLOCK("vine", Tile::vine_Id, 0);
     ADD_BLOCK("fence_gate", Tile::fenceGate_Id, 0);
     ADD_BLOCK("brick_stairs", Tile::stairs_bricks_Id, 0);
-    ADD_BLOCK("stone_brick_stairs", Tile::stairs_stoneBrickSmooth_Id, 0);
+    ADD_BLOCK("stone_brick_stairs", Tile::stairs_stoneBrick_Id, 0);
     ADD_BLOCK("mycelium", Tile::mycel_Id, 0);
     ADD_BLOCK("waterlily", Tile::waterLily_Id, 0);
     ADD_BLOCK("nether_brick", Tile::netherBrick_Id, 0);
@@ -237,7 +237,7 @@ void IDMapping::init() {
     ADD_BLOCK("cauldron", Tile::cauldron_Id, 0);
     ADD_BLOCK("end_portal", Tile::endPortalTile_Id, 0);
     ADD_BLOCK("end_portal_frame", Tile::endPortalFrameTile_Id, 0);
-    ADD_BLOCK("white_stone", Tile::whiteStone_Id, 0);
+    ADD_BLOCK("white_stone", Tile::endStone_Id, 0);
     ADD_BLOCK("dragon_egg", Tile::dragonEgg_Id, 0);
     ADD_BLOCK("redstone_lamp", Tile::redstoneLight_Id, 0);
     ADD_BLOCK("lit_redstone_lamp", Tile::redstoneLight_lit_Id, 0);
@@ -328,7 +328,7 @@ void IDMapping::init() {
     ADD_ITEM("mushroom_stew", Item::mushroomStew_Id, 0);
 
     ADD_ITEM("feather", Item::feather_Id, 0);
-    ADD_ITEM("gunpowder", Item::sulphur_Id, 0);
+    ADD_ITEM("gunpowder", Item::gunpowder_Id, 0);
 
     ADD_ITEM("wooden_hoe", Item::hoe_wood_Id, 0);
     ADD_ITEM("stone_hoe", Item::hoe_stone_Id, 0);
@@ -340,10 +340,10 @@ void IDMapping::init() {
     ADD_ITEM("wheat", Item::wheat_Id, 0);
     ADD_ITEM("bread", Item::bread_Id, 0);
 
-    ADD_ITEM("leather_helmet", Item::helmet_cloth_Id, 0);
-    ADD_ITEM("leather_chestplate", Item::chestplate_cloth_Id, 0);
-    ADD_ITEM("leather_leggings", Item::leggings_cloth_Id, 0);
-    ADD_ITEM("leather_boots", Item::boots_cloth_Id, 0);
+    ADD_ITEM("leather_helmet", Item::helmet_leather_Id, 0);
+    ADD_ITEM("leather_chestplate", Item::chestplate_leather_Id, 0);
+    ADD_ITEM("leather_leggings", Item::leggings_leather_Id, 0);
+    ADD_ITEM("leather_boots", Item::boots_leather_Id, 0);
 
     ADD_ITEM("iron_helmet", Item::helmet_iron_Id, 0);
     ADD_ITEM("iron_chestplate", Item::chestplate_iron_Id, 0);
@@ -380,7 +380,7 @@ void IDMapping::init() {
     ADD_ITEM("boat", Item::boat_Id, 0);
 
     ADD_ITEM("leather", Item::leather_Id, 0);
-    ADD_ITEM("milk_bucket", Item::milk_Id, 0);
+    ADD_ITEM("milk_bucket", Item::bucket_milk_Id, 0);
 
     ADD_ITEM("brick", Item::brick_Id, 0);
     ADD_ITEM("clay_ball", Item::clay_Id, 0);
@@ -479,10 +479,10 @@ void IDMapping::init() {
     ADD_ITEM("magenta_dye", Item::dye_powder_Id, 13);
     ADD_ITEM("orange_dye", Item::dye_powder_Id, 14);
     ADD_ITEM("bone_meal", Item::dye_powder_Id, 15);
-    ADD_ITEM("nether_wart", Item::netherStalkSeeds_Id, 0);
+    ADD_ITEM("nether_wart", Item::netherwart_seeds_Id, 0);
     ADD_ITEM("fermented_spider_eye", Item::fermentedSpiderEye_Id, 0);
     ADD_ITEM("speckled_melon", Item::speckledMelon_Id, 0);
-    ADD_ITEM("spawn_egg", Item::monsterPlacer_Id, 0);
+    ADD_ITEM("spawn_egg", Item::spawnEgg_Id, 0);
     ADD_ITEM("skeleton_skull", Item::skull_Id, 0);
     ADD_ITEM("wither_skeleton_skull", Item::skull_Id, 1);
     ADD_ITEM("zombie_head", Item::skull_Id, 2);

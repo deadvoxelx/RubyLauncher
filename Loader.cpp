@@ -73,7 +73,7 @@ void Loader::collectMods() {
 
         nlohmann::json json;
         try {
-            json = getManifest(modEntry.path());
+            json = getManifest(modEntry.path().string());
         } catch (const std::exception& e) {
             _debugPrint("Could not read manifest.json for '"+modPath+"' exception: "+e.what());
             continue;

@@ -1,14 +1,16 @@
 #pragma once
 
-#include "Minecraft.World/Items/Item.h"
-#include "Minecraft.World/Items/FoodItem.h"
-#include "Minecraft.World/Items/HoeItem.h"
-#include "Minecraft.World/Items/WeaponItem.h"
-#include "Minecraft.World/Items/PickaxeItem.h"
-#include "Minecraft.World/Items/HatchetItem.h"
-#include "Minecraft.World/Items/ShovelItem.h"
+#include "Item.h"
+#include "FoodItem.h"
+#include "HoeItem.h"
+#include "WeaponItem.h"
+#include "PickaxeItem.h"
+#include "HatchetItem.h"
+#include "ShovelItem.h"
 
-#include "includes/sol/sol.hpp"
+#include "sol/sol.hpp"
+
+#include "ModItem.h"
 
 enum EBaseItem {
     Default,
@@ -63,7 +65,7 @@ public:
                 return (new FoodItem(id,def.nutrition,def.saturationMod,def.isMeat));
             case EBaseItem::Default:
             default:
-                return (new Item(id));
+                return (new ModItem(id));
         }
     }
 };

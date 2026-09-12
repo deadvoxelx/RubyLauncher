@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Minecraft.Client/MinecraftServer.h"
+#include "MinecraftServer.h"
 
 #include "sol/sol.hpp"
 

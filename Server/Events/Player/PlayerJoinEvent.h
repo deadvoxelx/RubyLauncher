@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Minecraft.Client/Player/ServerPlayer.h"
+#include "ServerPlayer.h"
 
 #include "Common/EventSystem/CactusEvent.h"
 

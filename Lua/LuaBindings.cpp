@@ -1,21 +1,21 @@
 #include "LuaBindings.h"
 #include "Loader.h"
 
-#include "../Minecraft.Client/Player/ServerPlayerGameMode.h"
-#include "../Minecraft.Client/Player/ServerPlayer.h"
-#include "../Minecraft.Client/Network/PlayerList.h"
-#include "../Minecraft.Client/MinecraftServer.h"
-#include "../Minecraft.World/Level/Storage/LevelSettings.h"
-#include "../Minecraft.World/Commands/CommandDispatcher.h"
-#include "../Minecraft.World/Level/Level.h"
-#include "../Minecraft.Client/Network/PlayerConnection.h"
-#include "../Minecraft.World/Blocks/Tile.h"
+#include "ServerPlayerGameMode.h"
+#include "ServerPlayer.h"
+#include "PlayerList.h"
+#include "MinecraftServer.h"
+#include "LevelSettings.h"
+#include "CommandDispatcher.h"
+#include "Level.h"
+#include "PlayerConnection.h"
+#include "Tile.h"
 
 /* Server Includes */
 
-#include "Minecraft.World/Network/Packets/PlayerAbilitiesPacket.h"
-#include "Minecraft.Client/Level/ServerLevel.h"
-#include "Minecraft.World/Items/Item.h"
+#include "PlayerAbilitiesPacket.h"
+#include "ServerLevel.h"
+#include "Item.h"
 
 #include "Registry/Item/ItemRegistry.h"
 #include "Registry/Item/ItemFactory.h"
@@ -100,7 +100,7 @@ void LuaBindings::bindServerEvents(sol::state& lua) {
             return inv.getItem(slot);
         },
         "clear", [](Inventory& inv) {
-            inv.clearInventory();
+            inv.clearInventory(-1, -1);
         }
     );
 
@@ -174,12 +174,12 @@ void LuaBindings::bindServerEvents(sol::state& lua) {
         "getViewDistance", [](ServerPlayer& player) {
             return player.getViewDistance();
         },
-        "displayName", &ServerPlayer::displayName,
+        "displayName", &ServerPlayer::m_displayName,
         "experience",  &ServerPlayer::experienceProgress,
-        "flySpeed", &ServerPlayer::flyingSpeed,
+        "flySpeed", sol::property([](ServerPlayer& p) { return p.abilities.getFlyingSpeed(); }),
         "level", &ServerPlayer::experienceLevel,
         "name", &ServerPlayer::name,
-        "walkSpeed", &ServerPlayer::walkingSpeed,
+        "walkSpeed", sol::property([](ServerPlayer& p) { return p.abilities.getWalkingSpeed(); }),
         "giveExp", [](ServerPlayer& player, float amount) {
             player.experienceProgress += amount;
         },

@@ -1,14 +1,14 @@
 #include "ModTextureAtlas.h"
 
-#include "Minecraft.Client/Textures/Texture.h"
-#include "Minecraft.Client/Textures/TextureManager.h"
-#include "Minecraft.Client/Textures/BufferedImage.h"
-#include "Minecraft.Client/Textures/TextureHolder.h"
-#include "Minecraft.Client/UI/SimpleIcon.h"
-#include "Minecraft.Client/Textures/Stitching/StitchedTexture.h"
-#include "Minecraft.Client/Textures/Stitching/StitchSlot.h"
-#include "Minecraft.Client/Textures/Stitching/Stitcher.h"
-#include "Minecraft.Client/Textures/Stitching/PreStitchedTextureMap.h"
+#include "Texture.h"
+#include "TextureManager.h"
+#include "BufferedImage.h"
+#include "TextureHolder.h"
+#include "SimpleIcon.h"
+#include "StitchedTexture.h"
+#include "StitchSlot.h"
+#include "Stitcher.h"
+#include "PreStitchedTextureMap.h"
 
 #include <cstring>
 
@@ -78,7 +78,7 @@ void ModTextureAtlas::build() {
         if (it == holderNames.end()) continue;
         const std::wstring& name = it->second;
 
-        SimpleIcon* icon = new SimpleIcon(name, 0.0f, 0.0f, 1.0f, 1.0f);
+        SimpleIcon* icon = new SimpleIcon(name, L"", 0.0f, 0.0f, 1.0f, 1.0f);
         icon->init(atlasTexture, nullptr, slot->getX(), slot->getY(), holder->getWidth(), holder->getHeight(), holder->isRotated());
         icons[name] = icon;
     }
@@ -108,26 +108,7 @@ int ModTextureAtlas::getAtlasGlId() {
 }
 
 void ModTextureAtlas::registerPendingTexturesIntoTerrainAtlas(PreStitchedTextureMap *terrainMap) {
-    for (const PendingTexture& pendingTexture : pending) {
-        terrainMap->registerIconFromPixels(pendingTexture.name, pendingTexture.pixels, pendingTexture.width, pendingTexture.height);
-    }
 }
 
 void ModTextureAtlas::finalizeIntoTerrainMap(PreStitchedTextureMap* terrainMap) {
-    if (pending.empty()) return;
-
-    std::vector<std::pair<std::wstring, std::vector<int>>> modTextures;
-    for (const PendingTexture& pt : pending) {
-        modTextures.push_back({ pt.name, pt.pixels });
-    }
-
-    terrainMap->expandWithModTextures(modTextures, 16, 16);
-
-    for (const PendingTexture& pt : pending) {
-        Icon* icon = terrainMap->registerIcon(pt.name);
-        if (icon) icons[pt.name] = dynamic_cast<StitchedTexture*>(icon);
-    }
-
-    pending.clear();
-    stitchedIntoTerrain = true;
 }

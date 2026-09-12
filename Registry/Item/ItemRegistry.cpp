@@ -1,14 +1,15 @@
 #include "ItemRegistry.h"
 
-#include "Minecraft.World/Items/Item.h"
+#include "Item.h"
 
 #include "Client/Rendering/ModTextureAtlas.h"
 #include "ItemFactory.h"
+#include "ModItem.h"
 #include "Registry/IDs.h"
 
 std::vector<std::wstring> ItemRegistry::langList(2000);
-int ItemRegistry::itemNameIdMax = 1937;
-int ItemRegistry::itemIdMax = 406;
+int ItemRegistry::itemNameIdMax = 1955;
+int ItemRegistry::itemIdMax = 421;
 
 int ItemRegistry::nextItemNameId() {
     itemNameIdMax += 1;
@@ -43,14 +44,14 @@ int ItemRegistry::registerItem(const std::wstring& path, const std::string& id, 
             delete img;
 
             Item::items[itemId] = (ItemFactory::create(def, itemId - 256))
-            ->setTextureName(wname)
+            ->setIconName(wname)
             ->handEquipped()
             ->setDescriptionId(nameId)
             ->setUseDescriptionId(IDS_DESC_STICK);
             IDMapping::get()->add(modId,id,false,itemId);
 
         }else {
-            Item::items[itemId] = (new Item(itemId))->setTextureName(L"stick")->handEquipped()->setDescriptionId(nameId)->setUseDescriptionId(IDS_DESC_STICK);
+            Item::items[itemId] = (new ModItem(itemId))->setIconName(L"stick")->handEquipped()->setDescriptionId(nameId)->setUseDescriptionId(IDS_DESC_STICK);
         }
     }
 
@@ -62,8 +63,5 @@ int ItemRegistry::registerItem(const std::wstring& path, const std::string& id, 
 void ItemRegistry::changeLang(StringTable& m_stringTable) {
     // So c++ just deprecated wstring_convert with no alternative 🥀 either way we could just have used wstring from the start instead of storing langList as a list of strings
     //CML R: yeah but i HATE wstring ewwwww gross
-    for (size_t i = 0; i < langList.size(); i++) {
-        if (langList[i].empty()) continue;
-        m_stringTable.addData(i, langList[i]);
-    }
+    (void)m_stringTable;
 }
