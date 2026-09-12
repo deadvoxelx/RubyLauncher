@@ -19,14 +19,14 @@ set_target_properties(lua54 PROPERTIES LINKER_LANGUAGE C)
 
 file(GLOB_RECURSE CML_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 
-add_library(Cactus.ModLoader STATIC ${CML_SOURCES})
+add_library(Ruby.Launcher STATIC ${CML_SOURCES})
 
-target_include_directories(Cactus.ModLoader PUBLIC
+target_include_directories(Ruby.Launcher PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}"
   "${CMAKE_CURRENT_SOURCE_DIR}/includes"
 )
 
-target_include_directories(Cactus.ModLoader PRIVATE
+target_include_directories(Ruby.Launcher PRIVATE
   "${CMAKE_SOURCE_DIR}/Minecraft.Client"
   "${CMAKE_SOURCE_DIR}/Minecraft.Client/${PLATFORM_NAME}/Iggy/include"
   "${CMAKE_SOURCE_DIR}/Minecraft.World"
@@ -36,7 +36,11 @@ target_include_directories(Cactus.ModLoader PRIVATE
 
 set(CML_DEFINES ${MINECRAFT_SHARED_DEFINES})
 list(FILTER CML_DEFINES EXCLUDE REGEX "_HAS_STD_BYTE")
-target_compile_definitions(Cactus.ModLoader PRIVATE ${CML_DEFINES} PUBLIC CACTUS_MODLOADER)
-target_precompile_headers(Cactus.ModLoader PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_SOURCE_DIR}/Minecraft.Client/stdafx.h>")
-configure_compiler_target(Cactus.ModLoader)
-target_link_libraries(Cactus.ModLoader PUBLIC lua54 PRIVATE Minecraft.World)
+target_compile_definitions(Ruby.Launcher PRIVATE ${CML_DEFINES} PUBLIC RUBY_LAUNCHER)
+target_precompile_headers(Ruby.Launcher PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_SOURCE_DIR}/Minecraft.Client/stdafx.h>")
+if(COMMAND configure_compiler_target)
+  configure_compiler_target(Ruby.Launcher)
+else()
+  target_compile_features(Ruby.Launcher PRIVATE cxx_std_17)
+endif()
+target_link_libraries(Ruby.Launcher PUBLIC lua54 PRIVATE Minecraft.World)

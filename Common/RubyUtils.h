@@ -10,7 +10,7 @@
 
 class Item;
 
-namespace CactusUtils {
+namespace RubyUtils {
     static bool isPlaceableItem(Item* item) {
         if (item == nullptr) return false;
         return dynamic_cast<TileItem*>(item) != nullptr ||

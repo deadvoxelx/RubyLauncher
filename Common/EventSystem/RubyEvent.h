@@ -2,11 +2,11 @@
 
 #include <string>
 
-struct CactusEvent {
+struct RubyEvent {
     std::string eventName;
 };
 
-struct CancellableCactusEvent : public CactusEvent {
+struct CancellableRubyEvent : public RubyEvent {
     bool cancelled = false;
 
     void setCancelled(bool value) { cancelled = value; }

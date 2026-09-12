@@ -30,7 +30,7 @@
 #include "Server/Events/Player/PlayerFlightStartedEvent.h"
 #include "Server/Events/Player/PlayerFlightEndedEvent.h"
 
-#include "Common/CactusUtils.h"
+#include "Common/RubyUtils.h"
 #include "LuaStructs.h"
 
 
@@ -68,29 +68,29 @@ void LuaBindings::bindServerEvents(sol::state& lua) {
         }
     );
 
-    lua.new_usertype<CancellableCactusEvent>("CancellableCactusEvent",
-        "setCancelled", &CancellableCactusEvent::setCancelled,
-        "isCancelled", &CancellableCactusEvent::isCancelled,
-        sol::base_classes, sol::bases<CactusEvent>()
+    lua.new_usertype<CancellableRubyEvent>("CancellableRubyEvent",
+        "setCancelled", &CancellableRubyEvent::setCancelled,
+        "isCancelled", &CancellableRubyEvent::isCancelled,
+        sol::base_classes, sol::bases<RubyEvent>()
     );
 
-    lua.new_usertype<CactusEvent>("CactusEvent",
-        "name", &CactusEvent::eventName
+    lua.new_usertype<RubyEvent>("RubyEvent",
+        "name", &RubyEvent::eventName
     );
 
     lua.new_usertype<Inventory>("Inventory",
         "setItem", [](Inventory& inv, const int slot, int count, const std::string& identifier, sol::this_state state) {
             IDMapping::MappedItem mapping = IDMapping::get()->getID(identifier);
             if (mapping.id == 0 && identifier != "minecraft:air") {
-                CactusUtils::LuaException(state, "Identifier " + identifier + " does not exist");
+                RubyUtils::LuaException(state, "Identifier " + identifier + " does not exist");
                 return;
             }
             if (Item::items[mapping.id] == nullptr) {
-                CactusUtils::LuaException(state, "Item id " + std::to_string(mapping.id) + " is null in Item::items");
+                RubyUtils::LuaException(state, "Item id " + std::to_string(mapping.id) + " is null in Item::items");
                 return;
             }
             if (count <= 0) {
-                CactusUtils::LuaException(state, "Item count is zero");
+                RubyUtils::LuaException(state, "Item count is zero");
                 return;
             }
 
@@ -148,7 +148,7 @@ void LuaBindings::bindServerEvents(sol::state& lua) {
                 auto vec3 = target.as<LuaVec3>();
                 player.teleportTo(vec3.x, vec3.y, vec3.z);
             }else {
-                CactusUtils::LuaException(state, "Not a valid Vec3 object");
+                RubyUtils::LuaException(state, "Not a valid Vec3 object");
             }
         },
         "setCanFly", [](ServerPlayer& player, bool toggle) {
@@ -207,7 +207,7 @@ void LuaBindings::bindServerEvents(sol::state& lua) {
                 if (p.level->getTile(vec3.x,vec3.y,vec3.z) == 0) return;
                 p.gameMode->destroyBlock(vec3.x, vec3.y, vec3.z);
             }else {
-                CactusUtils::LuaException(state, "Not a valid Vec3 object");
+                RubyUtils::LuaException(state, "Not a valid Vec3 object");
             }
         }
     );
@@ -215,40 +215,40 @@ void LuaBindings::bindServerEvents(sol::state& lua) {
     lua.new_usertype<PlayerBlockBreakEvent>("PlayerBlockBreakEvent",
         "player", &PlayerBlockBreakEvent::player,
         "block", &PlayerBlockBreakEvent::block,
-        sol::base_classes, sol::bases<CancellableCactusEvent, CactusEvent>()
+        sol::base_classes, sol::bases<CancellableRubyEvent, RubyEvent>()
     );
 
     lua.new_usertype<PlayerBlockPlaceEvent>("PlayerBlockPlaceEvent",
         "player", &PlayerBlockPlaceEvent::player,
         "block", &PlayerBlockPlaceEvent::block,
-        sol::base_classes, sol::bases<CancellableCactusEvent, CactusEvent>()
+        sol::base_classes, sol::bases<CancellableRubyEvent, RubyEvent>()
     );
 
     lua.new_usertype<ItemInteractEvent>("ItemInteractEvent",
         "item", &ItemInteractEvent::item,
         //"level", &ItemInteractEvent::level, // We need to implement a usertype for level
         "player", &ItemInteractEvent::player,
-        sol::base_classes, sol::bases<CactusEvent>()
+        sol::base_classes, sol::bases<RubyEvent>()
     );
 
     lua.new_usertype<PlayerConnectionEvent>("PlayerConnectionEvent",
         "player", &PlayerConnectionEvent::player,
-        sol::base_classes, sol::bases<CactusEvent>()
+        sol::base_classes, sol::bases<RubyEvent>()
     );
 
     lua.new_usertype<PlayerJoinEvent>("PlayerJoinEvent",
         "player", &PlayerJoinEvent::player,
-        sol::base_classes, sol::bases<CactusEvent>()
+        sol::base_classes, sol::bases<RubyEvent>()
     );
 
     lua.new_usertype<PlayerFlightStartedEvent>("PlayerFlightStartedEvent",
         "player", &PlayerFlightStartedEvent::player,
-        sol::base_classes, sol::bases<CactusEvent>()
+        sol::base_classes, sol::bases<RubyEvent>()
     );
 
     lua.new_usertype<PlayerFlightEndedEvent>("PlayerFlightEndedEvent",
         "player", &PlayerFlightEndedEvent::player,
-        sol::base_classes, sol::bases<CactusEvent>()
+        sol::base_classes, sol::bases<RubyEvent>()
     );
 }
 
@@ -344,7 +344,7 @@ void LuaBindings::bindClientFunctions(sol::state& lua) {
 
         int registeredBlock = BlockRegistry::registerBlock(path, id, name, modId, texturePath);
         if (registeredBlock == -1) {
-            CactusUtils::LuaException(state, "The block registry limit has been reached, can't register more than 81 custom blocks");
+            RubyUtils::LuaException(state, "The block registry limit has been reached, can't register more than 81 custom blocks");
             return -1;
         }
         return registeredBlock;

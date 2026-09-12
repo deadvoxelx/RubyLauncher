@@ -3,9 +3,9 @@
 class ServerLevel;
 #include "ServerPlayer.h"
 
-#include "Common/EventSystem/CactusEvent.h"
+#include "Common/EventSystem/RubyEvent.h"
 
-struct ItemInteractEvent final : public CactusEvent {
+struct ItemInteractEvent final : public RubyEvent {
     ItemInstance* item;
     ServerLevel* level;
     ServerPlayer* player;

@@ -1,14 +1,14 @@
 #pragma once
 
 class ServerPlayer;
-#include "Common/EventSystem/CactusEvent.h"
+#include "Common/EventSystem/RubyEvent.h"
 #include "Lua/LuaStructs.h"
 
-struct PlayerBlockPlaceEvent final : public CancellableCactusEvent {
+struct PlayerBlockPlaceEvent final : public CancellableRubyEvent {
     ServerPlayer* player;
     LuaBlock block;
 
-    /* CactusModLoader [IMPL-AT] (Minecraft.Client/Network/PlayerConnection.cpp) */
+    /* Ruby Launcher [IMPL-AT] (Minecraft.Client/Network/PlayerConnection.cpp) */
     PlayerBlockPlaceEvent(ServerPlayer* player, int x, int y, int z, int blockId) : player(player), block{LuaVec3(x,y,z), blockId} {
         eventName = "PlayerBlockPlaceEvent";
     }

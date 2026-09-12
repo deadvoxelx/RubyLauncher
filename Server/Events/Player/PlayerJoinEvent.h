@@ -2,12 +2,12 @@
 
 #include "ServerPlayer.h"
 
-#include "Common/EventSystem/CactusEvent.h"
+#include "Common/EventSystem/RubyEvent.h"
 
-struct PlayerJoinEvent final : public CactusEvent {
+struct PlayerJoinEvent final : public RubyEvent {
     ServerPlayer* player;
 
-    /* CactusModLoader [IMPL-AT] (Minecraft.Client/Network/PlayerList.cpp) */
+    /* Ruby Launcher [IMPL-AT] (Minecraft.Client/Network/PlayerList.cpp) */
     PlayerJoinEvent(ServerPlayer* player) : player(player) {
         eventName = "PlayerJoinEvent";
     }

@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include "sol/sol.hpp"
 
-class CactusMod {
+class RubyMod {
 private:
     typedef std::unordered_map<std::string, std::string> Mapping;
     sol::environment serverEnv;
@@ -14,8 +14,8 @@ private:
 public:
     Mapping metadata;
 
-    CactusMod() = default;
-    ~CactusMod() = default;
+    RubyMod() = default;
+    ~RubyMod() = default;
 
     std::string_view getName() const;
     std::string_view getModID() const;

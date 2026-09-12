@@ -1,12 +1,12 @@
 #pragma once
 
 class ServerPlayer;
-#include "Common/EventSystem/CactusEvent.h"
+#include "Common/EventSystem/RubyEvent.h"
 
-struct PlayerFlightEndedEvent final : public CactusEvent {
+struct PlayerFlightEndedEvent final : public RubyEvent {
     ServerPlayer* player;
 
-    /* CactusModLoader [IMPL-AT] (Minecraft.Client/Network/PendingConnection.cpp) */
+    /* Ruby Launcher [IMPL-AT] (Minecraft.Client/Network/PendingConnection.cpp) */
     PlayerFlightEndedEvent(ServerPlayer* player) : player(player) {
         eventName = "FlightEndedEvent";
     }

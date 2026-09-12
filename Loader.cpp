@@ -33,11 +33,11 @@ Loader::Loader() {
     LuaBindings::bindCommonFunctions({ &luaServer, &luaClient });
     LuaBindings::bindClientFunctions(luaClient);
     LuaBindings::bindServerEvents(luaServer);
-    app.DebugPrintf("Cactus ModLoader initialized!\n");
+    app.DebugPrintf("Ruby Launcher initialized!\n");
 }
 
 void Loader::_debugPrint(const string &output) {
-    app.DebugPrintf(("[Cactus ModLoader] "+output+"\n").c_str());
+    app.DebugPrintf(("[Ruby Launcher] "+output+"\n").c_str());
 }
 
 nlohmann::json Loader::getManifest(const string &filePath) {
@@ -47,7 +47,7 @@ nlohmann::json Loader::getManifest(const string &filePath) {
 }
 
 void Loader::log(const string& message) {
-    app.DebugPrintf(("[Cactus ModLoader] " + message + "\n").c_str());
+    app.DebugPrintf(("[Ruby Launcher] " + message + "\n").c_str());
 }
 
 string Loader::loadFile(string fileName) {
@@ -79,7 +79,7 @@ void Loader::collectMods() {
             continue;
         }
         
-        CactusMod m;
+        RubyMod m;
         bool missingRequired = false;
 
         for ( const auto & metadata : requiredMetadata ) {
@@ -99,8 +99,8 @@ void Loader::collectMods() {
     }
 }
 
-void Loader::refresh(sol::state& luaState,std::string_view (CactusMod::*getEntry)() const,bool prependPath) {
-    std::vector<CactusMod> failedMods;
+void Loader::refresh(sol::state& luaState,std::string_view (RubyMod::*getEntry)() const,bool prependPath) {
+    std::vector<RubyMod> failedMods;
 
     for (auto& [name,mod] : mods_) {
         std::string modName = std::string(mod.getName());
@@ -153,14 +153,14 @@ void Loader::refresh(sol::state& luaState,std::string_view (CactusMod::*getEntry
 }
 
 void Loader::refreshServerScripts() {
-    refresh(luaServer,&CactusMod::getServerEntry,true);
+    refresh(luaServer,&RubyMod::getServerEntry,true);
 }
 
 void Loader::refreshClientScripts() {
-    refresh(luaClient,&CactusMod::getClientEntry,false);
+    refresh(luaClient,&RubyMod::getClientEntry,false);
 }
 
-void Loader::execute(sol::environment& (CactusMod::*getEnv)(), std::string funcName, bool warn) {
+void Loader::execute(sol::environment& (RubyMod::*getEnv)(), std::string funcName, bool warn) {
     for (auto& [name, mod] : mods_) {
         std::string modName = std::string(mod.getName());
 
@@ -183,9 +183,9 @@ void Loader::execute(sol::environment& (CactusMod::*getEnv)(), std::string funcN
 }
 
 void Loader::executeServerScripts(std::string name, bool warn) {
-    execute(&CactusMod::getServerEnv, name, warn);
+    execute(&RubyMod::getServerEnv, name, warn);
 }
 
 void Loader::executeClientScripts(std::string name, bool warn) {
-    execute(&CactusMod::getClientEnv, name, warn);
+    execute(&RubyMod::getClientEnv, name, warn);
 }

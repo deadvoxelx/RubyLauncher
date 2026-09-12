@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include <type_traits>
 
-#include "CactusEvent.h"
+#include "RubyEvent.h"
 #include "sol/sol.hpp"
 
 class EventBus {
@@ -42,11 +42,11 @@ public:
             }
 
             if (result.valid() && result.get_type() == sol::type::boolean && result.template get<bool>()) {
-                if constexpr (std::is_base_of_v<CancellableCactusEvent, E>) {
+                if constexpr (std::is_base_of_v<CancellableRubyEvent, E>) {
                     event.setCancelled(true);
                 }
             }
-            if constexpr (std::is_base_of_v<CancellableCactusEvent, E>) {
+            if constexpr (std::is_base_of_v<CancellableRubyEvent, E>) {
                 if (event.isCancelled()) wasCanceled = true;
             }
         }

@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Common/EventSystem/CactusEvent.h"
+#include "Common/EventSystem/RubyEvent.h"
 
-struct ItemInteractEntityEvent final : public CactusEvent {
+struct ItemInteractEntityEvent final : public RubyEvent {
     ItemInstance* item;
     Mob* mob;
 
-    /* CactusModLoader [IMPL-AT] (Minecraft.World/Item/Item.cpp) */
+    /* Ruby Launcher [IMPL-AT] (Minecraft.World/Item/Item.cpp) */
     ItemInteractEntityEvent(ItemInstance item, Mob &mob) : item(&item), mob(&mob) {
         eventName = "ItemInteractEntity";
     }

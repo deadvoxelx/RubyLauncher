@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Common/EventSystem/EventBus.h"
-#include "CactusMod.h"
+#include "RubyMod.h"
 
 #include "sol/sol.hpp"
 #include "json/json.hpp"
@@ -19,8 +19,8 @@ public:
 
     static void log(const std::string &message);
 
-    void refresh(sol::state& luaState,std::string_view (CactusMod::*getEntry)() const,bool prependPath = false);
-    void execute(sol::environment& (CactusMod::*getEnv)(), std::string funcName, bool warn);
+    void refresh(sol::state& luaState,std::string_view (RubyMod::*getEntry)() const,bool prependPath = false);
+    void execute(sol::environment& (RubyMod::*getEnv)(), std::string funcName, bool warn);
 
     void refreshServerScripts();
     void refreshClientScripts();
@@ -31,7 +31,7 @@ public:
     static void _debugPrint(const std::string &output);
 
 
-    std::map<std::string_view, CactusMod> mods_;
+    std::map<std::string_view, RubyMod> mods_;
 
     sol::state luaServer;
     sol::state luaClient;
