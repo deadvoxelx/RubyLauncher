@@ -6,7 +6,7 @@
 #include <utility>
 #include <string>
 
-#include "Client/Rendering/ModTextureAtlas.h"
+#include "Common/ModPaths.h"
 #include "Lua/LuaBindings.h"
 
 class MinecraftServer;
@@ -15,7 +15,6 @@ namespace fs = std::filesystem;
 using string = std::string;
 
 Loader::Loader() {
-    ModTextureAtlas::createInstance();
     luaServer.open_libraries(sol::lib::base, sol::lib::string, sol::lib::table, sol::lib::package, sol::lib::math);
     luaClient.open_libraries(sol::lib::base, sol::lib::string, sol::lib::table, sol::lib::package, sol::lib::math);
 
@@ -26,9 +25,7 @@ Loader::Loader() {
     lua_atpanic(luaServer.lua_state(), panicHandler);
     lua_atpanic(luaClient.lua_state(), panicHandler);
 
-    if (!fs::exists("mods")) {
-        fs::create_directory("mods/");
-    }
+    RubyPaths::ensureModsFolderExists();
 
     LuaBindings::bindCommonFunctions({ &luaServer, &luaClient });
     LuaBindings::bindClientFunctions(luaClient);
@@ -37,7 +34,7 @@ Loader::Loader() {
 }
 
 void Loader::_debugPrint(const string &output) {
-    app.DebugPrintf(("[Ruby Launcher] "+output+"\n").c_str());
+    app.DebugPrintf(("Ruby Launcher: "+output+"\n").c_str());
 }
 
 nlohmann::json Loader::getManifest(const string &filePath) {
@@ -47,7 +44,7 @@ nlohmann::json Loader::getManifest(const string &filePath) {
 }
 
 void Loader::log(const string& message) {
-    app.DebugPrintf(("[Ruby Launcher] " + message + "\n").c_str());
+    app.DebugPrintf(("Ruby Launcher: " + message + "\n").c_str());
 }
 
 string Loader::loadFile(string fileName) {
@@ -66,8 +63,7 @@ bool hasMetadata(nlohmann::json& json, const std::string& key) {
 }
 
 void Loader::collectMods() {
-    //iterate through mods folder
-    for (const auto & modEntry : fs::directory_iterator("mods/")) {
+    for (const auto & modEntry : fs::directory_iterator(RubyPaths::modsRoot())) {
         if (!modEntry.is_directory()) continue;
         string modPath = modEntry.path().string();
 
@@ -75,7 +71,7 @@ void Loader::collectMods() {
         try {
             json = getManifest(modEntry.path().string());
         } catch (const std::exception& e) {
-            _debugPrint("Could not read manifest.json for '"+modPath+"' exception: "+e.what());
+            _debugPrint("Couldnt read manifest.json for '"+modPath+"' exception: "+e.what());
             continue;
         }
         
@@ -84,7 +80,7 @@ void Loader::collectMods() {
 
         for ( const auto & metadata : requiredMetadata ) {
             if (!hasMetadata(json, metadata)) {
-                _debugPrint((modPath+" missing metadata '"+metadata+"' please add it to your manifest.json"));
+                _debugPrint((modPath+" missing metadata '"+metadata+"' add it to your manifest.json"));
                 missingRequired = true;
                 break;
             }
@@ -95,7 +91,7 @@ void Loader::collectMods() {
 
         string folderName = modEntry.path().filename().string();
         m.setPathName(folderName);
-        mods_[m.getName()] = m;
+        mods_[std::string(m.getName())] = m;
     }
 }
 
@@ -108,15 +104,15 @@ void Loader::refresh(sol::state& luaState,std::string_view (RubyMod::*getEntry)(
         std::string folderName = std::string(mod.getPathName());
         std::string modEntry = std::string((mod.*getEntry)());
 
-        std::string scriptPath = "mods/" + folderName + "/" + modEntry;
+        std::string scriptPath = RubyPaths::modScriptPath(folderName, modEntry);
         if (!fs::exists(scriptPath)) {
-            _debugPrint("Could not find file for " + scriptPath + " for mod " + modName);
+            _debugPrint("Couldnt find file for " + scriptPath + " for mod " + modName);
             continue;
         }
 
         if (prependPath) {
             std::string currentPath = luaState["package"]["path"];
-            luaState["package"]["path"] = "mods/" + folderName + "/?.lua;" + currentPath;
+            luaState["package"]["path"] = RubyPaths::modsRoot() + "/" + folderName + "/?.lua;" + currentPath;
         }
 
         sol::environment modEnv(luaState, sol::create, luaState.globals());
@@ -127,7 +123,7 @@ void Loader::refresh(sol::state& luaState,std::string_view (RubyMod::*getEntry)(
         try {
             result = luaState.safe_script_file(scriptPath, modEnv, sol::script_pass_on_error);
         } catch (const sol::error& e) {
-            _debugPrint("There is a lua error in '"+folderName+"/"+modEntry+"' error: "+e.what());
+            _debugPrint("Lua error in '"+folderName+"/"+modEntry+"' error: "+e.what());
             failedMods.push_back(mod);
             continue;
         }
@@ -141,14 +137,14 @@ void Loader::refresh(sol::state& luaState,std::string_view (RubyMod::*getEntry)(
             _debugPrint(modId + "'s '" + modEntry + "' has been loaded successfully");
         } else {
             sol::error err = result;
-            _debugPrint("There is a lua error in '"+folderName+"/"+modEntry+"' error: "+err.what());
+            _debugPrint("Lua error in '"+folderName+"/"+modEntry+"' error: "+err.what());
             failedMods.push_back(mod);
         }
     }
 
     for (const auto& failedMod : failedMods) {
         _debugPrint("Unloading '"+std::string(failedMod.getName())+"' due to script error");
-        mods_.erase(failedMod.getName());
+        mods_.erase(std::string(failedMod.getName()));
     }
 }
 
@@ -176,8 +172,7 @@ void Loader::execute(sol::environment& (RubyMod::*getEnv)(), std::string funcNam
                 _debugPrint(("Error in '"+modName+"': "+err.what()).c_str());
             }
         } else {
-            if (!warn) return;
-            _debugPrint(("Mod "+modName+" must have a '"+funcName+"()' function in its global table, 'function "+modName+"."+funcName+"()' is missing"));
+            if (warn) _debugPrint(("Mod "+modName+" must have a '"+funcName+"()' function in its global table, 'function "+modName+"."+funcName+"()' is missing"));
         }
     }
 }

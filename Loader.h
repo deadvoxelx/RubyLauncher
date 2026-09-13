@@ -30,11 +30,11 @@ public:
 
     static void _debugPrint(const std::string &output);
 
-
-    std::map<std::string_view, RubyMod> mods_;
+    std::map<std::string, RubyMod> mods_;
 
     sol::state luaServer;
     sol::state luaClient;
+
 private:
     static nlohmann::json getManifest(const std::string &filePath);
     static std::string loadFile(std::string fileName);

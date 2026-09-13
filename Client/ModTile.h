@@ -1,25 +1,36 @@
 #pragma once
 
-#include "StitchedTexture.h"
-#include "Icon.h"
 #include "Tile.h"
 
-#include "Rendering/ModTextureAtlas.h"
+#include <string>
+
+struct ModTileTraits
+{
+    Material *material = nullptr;
+    const Tile::SoundType *sound = nullptr;
+    std::wstring textureIconName;
+    std::wstring placeholderIconName;
+    float hardness = 1.5f;
+    float resistance = -1.0f;
+    int craftingCategory = 0;
+    int itemMaterial = 0;
+};
 
 class ModTile : public Tile {
-    std::wstring m_modTextureName;
-
 public:
-    ModTile(int id, Material* material, const std::wstring& modTextureName) : Tile(id, material, true), m_modTextureName(modTextureName) {}
+    ModTile(int id, const ModTileTraits& traits) : Tile(id, traits.material, true)
+    {
+        setIconName(traits.textureIconName.empty() ? traits.placeholderIconName : traits.textureIconName);
+        setDestroyTime(traits.hardness);
 
-    Icon* getTexture(int face) override {
-        if (!ModTextureAtlas::getInstance()) return nullptr;
-        return ModTextureAtlas::getInstance()->getIcon(m_modTextureName);
-    }
-    Icon* getTexture(int face, int data) override {
-        return getTexture(face);
-    }
-    Icon* getTexture(LevelSource *level, int x, int y, int z, int face) override {
-        return getTexture(face);
+        if (traits.resistance >= 0.0f) {
+            setExplodeable(traits.resistance);
+        }
+
+        if (traits.sound != nullptr) {
+            setSoundType(traits.sound);
+        }
+
+        setBaseItemTypeAndMaterial(traits.craftingCategory, traits.itemMaterial);
     }
 };

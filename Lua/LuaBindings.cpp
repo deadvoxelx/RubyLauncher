@@ -1,4 +1,5 @@
 #include "LuaBindings.h"
+#include "Common/ModPaths.h"
 #include "Loader.h"
 
 #include "ServerPlayerGameMode.h"
@@ -22,6 +23,7 @@
 #include "Registry/Block/BlockRegistry.h"
 #include "Registry/IDs.h"
 
+#include "Server/Events/Item/ItemInteractEntityEvent.h"
 #include "Server/Events/Item/ItemInteractEvent.h"
 #include "Server/Events/Player/PlayerBlockBreakEvent.h"
 #include "Server/Events/Player/PlayerBlockPlaceEvent.h"
@@ -156,6 +158,10 @@ void LuaBindings::bindServerEvents(sol::state& lua) {
             unsigned int val = toggle == true ? 1 : 0;
             player.setPlayerGamePrivilege(Player::EPlayerGamePrivileges::ePlayerGamePrivilege_CanFly,val);
             player.abilities.mayfly = toggle;
+            if (player.connection == nullptr) {
+                Loader::_debugPrint("setCanFly: " + RubyPaths::toNarrow(player.name) + " has no connection yet, abilities not sent");
+                return;
+            }
             std::shared_ptr<PlayerAbilitiesPacket> pkt =
                 std::make_shared<PlayerAbilitiesPacket>(&player.abilities);
             player.connection->send(pkt);
@@ -164,6 +170,10 @@ void LuaBindings::bindServerEvents(sol::state& lua) {
             // Toggles the flight state (must implicitly toggle the permission if starting flight aswell!)
             if (toggle) player.abilities.mayfly = toggle; // If we are disabling flight; do not remove toggle. That is the job of toggleFlightAllowed
             player.abilities.flying = toggle;
+            if (player.connection == nullptr) {
+                Loader::_debugPrint("setFly: " + RubyPaths::toNarrow(player.name) + " has no connection yet, abilities not sent");
+                return;
+            }
             std::shared_ptr<PlayerAbilitiesPacket> pkt =
                 std::make_shared<PlayerAbilitiesPacket>(&player.abilities);
             player.connection->send(pkt);
@@ -228,6 +238,11 @@ void LuaBindings::bindServerEvents(sol::state& lua) {
         "item", &ItemInteractEvent::item,
         //"level", &ItemInteractEvent::level, // We need to implement a usertype for level
         "player", &ItemInteractEvent::player,
+        sol::base_classes, sol::bases<RubyEvent>()
+    );
+
+    lua.new_usertype<ItemInteractEntityEvent>("ItemInteractEntityEvent",
+        "item", &ItemInteractEntityEvent::item,
         sol::base_classes, sol::bases<RubyEvent>()
     );
 
@@ -310,7 +325,39 @@ void LuaBindings::bindClientFunctions(sol::state& lua) {
         {"Weapon", EBaseItem::Weapon},
         {"Pickaxe", EBaseItem::Pickaxe},
         {"Hatchet", EBaseItem::Hatchet},
-        {"Shovel", EBaseItem::Shovel}
+        {"Shovel", EBaseItem::Shovel},
+        {"Helmet", EBaseItem::Helmet},
+        {"Chestplate", EBaseItem::Chestplate},
+        {"Leggings", EBaseItem::Leggings},
+        {"Boots", EBaseItem::Boots}
+    });
+
+    lua.new_enum<EArmorMaterial>("EArmorMaterial", {
+        {"Cloth", ArmorMaterial_Cloth},
+        {"Chain", ArmorMaterial_Chain},
+        {"Iron", ArmorMaterial_Iron},
+        {"Gold", ArmorMaterial_Gold},
+        {"Diamond", ArmorMaterial_Diamond},
+        {"Nethanium", ArmorMaterial_Nethanium},
+        {"Endorium", ArmorMaterial_Endorium},
+        {"Zanite", ArmorMaterial_Zanite},
+        {"Gravitite", ArmorMaterial_Gravitite}
+    });
+
+    lua.new_enum<EItemTier>("EItemTier", {
+        {"Wood", ItemTier_Wood},
+        {"Stone", ItemTier_Stone},
+        {"Iron", ItemTier_Iron},
+        {"Diamond", ItemTier_Diamond},
+        {"Gold", ItemTier_Gold},
+        {"Nethanium", ItemTier_Nethanium},
+        {"Endorium", ItemTier_Endorium},
+        {"Zanite", ItemTier_Zanite},
+        {"Gravitite", ItemTier_Gravitite},
+        {"Vampire", ItemTier_Vampire},
+        {"Valkyrie", ItemTier_Valkyrie},
+        {"Aphalaf", ItemTier_Aphalaf},
+        {"Nusa", ItemTier_Nusa}
     });
 
     lua.new_usertype<ItemDefinition>("ItemDefinition",
@@ -319,7 +366,9 @@ void LuaBindings::bindClientFunctions(sol::state& lua) {
         "nutrition", &ItemDefinition::nutrition,
         "saturationMod", &ItemDefinition::saturationMod,
         "isMeat", &ItemDefinition::isMeat,
-        "tier", &ItemDefinition::tier
+        "tier", &ItemDefinition::tier,
+        "armorMaterial", &ItemDefinition::armorMaterial,
+        "armorSet", &ItemDefinition::armorSet
     );
 
     lua.new_usertype<Item::Tier>("Tier",
@@ -336,15 +385,42 @@ void LuaBindings::bindClientFunctions(sol::state& lua) {
         return ItemRegistry::registerItem(path, id, name, modId, def, texturePath);
     });
 
-    lua.set_function("registerBlock", [](sol::this_environment env,const std::string& id, const std::string& name, const std::string& texturePath, sol::this_state state) {
+    lua.new_enum<EBlockTool>("EBlockTool", {
+        {"None", BlockTool_None},
+        {"Pickaxe", BlockTool_Pickaxe},
+        {"Hatchet", BlockTool_Hatchet},
+        {"Shovel", BlockTool_Shovel},
+        {"Hoe", BlockTool_Hoe}
+    });
+
+    lua.new_usertype<BlockDefinition>("BlockDefinition",
+        sol::constructors<BlockDefinition(sol::table)>(),
+        "hardness", &BlockDefinition::hardness,
+        "resistance", &BlockDefinition::resistance,
+        "tool", &BlockDefinition::tool
+    );
+
+    lua.set_function("registerBlock", [](sol::this_environment env,const std::string& id, const std::string& name, const std::string& texturePath, sol::optional<sol::object> definition, sol::this_state state) {
         sol::environment& modEnv = env;
         std::string envPath = modEnv["pathName"];
         std::string modId = modEnv["modId"];
         std::wstring path = std::wstring(envPath.begin(), envPath.end());
 
-        int registeredBlock = BlockRegistry::registerBlock(path, id, name, modId, texturePath);
+        BlockDefinition def;
+        if (definition && definition->valid()) {
+            if (definition->is<BlockDefinition>()) {
+                def = definition->as<BlockDefinition>();
+            } else if (definition->is<sol::table>()) {
+                def = BlockDefinition(definition->as<sol::table>());
+            } else if (definition->get_type() != sol::type::nil) {
+                RubyUtils::LuaException(state, "registerBlock: the block definition must be a table or a BlockDefinition");
+                return -1;
+            }
+        }
+
+        int registeredBlock = BlockRegistry::registerBlock(path, id, name, modId, texturePath, def);
         if (registeredBlock == -1) {
-            RubyUtils::LuaException(state, "The block registry limit has been reached, can't register more than 81 custom blocks");
+            RubyUtils::LuaException(state, "The block registry limit has been reached, can't register more than " + std::to_string(BlockRegistry::maxBlockCount()) + " custom blocks");
             return -1;
         }
         return registeredBlock;

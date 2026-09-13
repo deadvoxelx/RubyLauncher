@@ -1,7 +1,7 @@
 {
-  "name": "Example Mod",
+  "name": "Steel Mod",
   "version": "1.0.0",
-  "modId": "example_mod",
+  "modId": "steelMod",
   "serverMain": "module/server.lua",
   "clientMain": "module/client.lua"
 }
