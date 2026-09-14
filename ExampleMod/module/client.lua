@@ -1,6 +1,6 @@
 function main()
     -- Blocks
-    local blockId = registerBlock
+    local steelBlockId = registerBlock
 	(	-- ID --		-- Name --		-- Texture --
 		"steelBlock", "Steel Block", "res/steel_block.png", 
 		BlockDefinition.new
@@ -12,10 +12,10 @@ function main()
 			}
 		)
 	)
-    log("Steel Mod: registered steelBlock as id " .. tostring(blockId))
+    log("Steel Mod: registered steelBlock as id " .. tostring(steelBlockId))
 
 	-- Basic Items
-    local gemId = registerItem
+    local steelIngotId = registerItem
 	(
 		"steelIngot", "Steel Ingot", "res/steel_ingot.png", 
 		ItemDefinition.new
@@ -25,7 +25,7 @@ function main()
 			}
 		)
 	)
-    log("Steel Mod: registered steelIngot as id " .. tostring(gemId))
+    log("Steel Mod: registered steelIngot as id " .. tostring(steelIngotId))
 
 	-- Foods
 	-- saturationMod guideline: 0.1 poor, 0.3 low, 0.6 normal, 0.8 good, 1.0 max, 1.2 supernatural
@@ -39,13 +39,31 @@ function main()
 				nutrition = 4, 
 				saturationMod = 0.3, 
 				isMeat = false
+				canAlwaysEat = true
 			}
 		)
 	)
 	log("Steel Mod: registered pear as id " .. tostring(pearId))
 
+	local steelAppleId = registerItem
+	(
+		"steelApple", "Steel Apple", "res/steel_apple.png", 
+		ItemDefinition.new
+		(
+			{
+				base = EBaseItem.Food, 
+				nutrition = 4, 
+				saturationMod = 0.6, 
+				isMeat = false, 
+				canAlwaysEat = true
+				-- The food effects are handled in server.lua
+			}
+		)
+	)
+	log("Steel Mod: registered steelApple as id " .. tostring(steelAppleId))
+
     -- Tools
-    local swordId = registerItem
+    local steelSwordId = registerItem
 	(
 		"steelSword", "Steel Sword", "res/steel_sword.png", 
 		ItemDefinition.new
@@ -56,9 +74,9 @@ function main()
 			}
 		)
 	)
-    log("Steel Mod: registered steelSword as id " .. tostring(swordId))
+    log("Steel Mod: registered steelSword as id " .. tostring(steelSwordId))
 	
-	local hatchetId = registerItem
+	local steelAxeId = registerItem
 	(
 		"steelAxe", "Steel Axe", "res/steel_axe.png", 
 		ItemDefinition.new
@@ -69,9 +87,9 @@ function main()
 			}
 		)
 	)
-    log("Steel Mod: registered steelAxe as id " .. tostring(hatchetId))
+    log("Steel Mod: registered steelAxe as id " .. tostring(steelAxeId))
 	
-	local pickaxeId = registerItem
+	local steelPickaxeId = registerItem
 	(
 		"steelPickaxe", "Steel Pickaxe", "res/steel_pickaxe.png", 
 		ItemDefinition.new
@@ -82,9 +100,9 @@ function main()
 			}
 		)
 	)
-    log("Steel Mod: registered steelPickaxe as id " .. tostring(pickaxeId))
+    log("Steel Mod: registered steelPickaxe as id " .. tostring(steelPickaxeId))
 	
-	local shovelId = registerItem
+	local steelShovelId = registerItem
 	(
 		"steelShovel", "Steel Shovel", "res/steel_shovel.png", 
 		ItemDefinition.new
@@ -95,9 +113,9 @@ function main()
 			}
 		)
 	)
-    log("Steel Mod: registered steelShovel as id " .. tostring(shovelId))
+    log("Steel Mod: registered steelShovel as id " .. tostring(steelShovelId))
 	
-	local hoeId = registerItem
+	local steelHoeId = registerItem
 	(
 		"steelHoe", "Steel Hoe", "res/steel_hoe.png", 
 		ItemDefinition.new
@@ -108,10 +126,10 @@ function main()
 			}
 		)
 	)
-    log("Steel Mod: registered steelHoe as id " .. tostring(hoeId))
+    log("Steel Mod: registered steelHoe as id " .. tostring(steelHoeId))
 
 	-- Armor
-	local helmetId = registerItem
+	local steelHelmetId = registerItem
 	(
 		"steelHelmet", "Steel Helmet", "res/steel_armor_helmet.png", 
 		ItemDefinition.new
@@ -123,9 +141,9 @@ function main()
 			}
 		)
 	)
-    log("Steel Mod: registered steelHelmet as id " .. tostring(helmetId))
+    log("Steel Mod: registered steelHelmet as id " .. tostring(steelHelmetId))
 
-	local chestplateId = registerItem
+	local steelChestplateId = registerItem
 	(
 		"steelChestplate", "Steel Chestplate", "res/steel_armor_chestplate.png", 
 		ItemDefinition.new
@@ -137,9 +155,9 @@ function main()
 			}
 		)
 	)
-    log("Steel Mod: registered steelChestplate as id " .. tostring(chestplateId))
+    log("Steel Mod: registered steelChestplate as id " .. tostring(steelChestplateId))
 
-	local leggingsId = registerItem
+	local steelLeggingsId = registerItem
 	(
 		"steelLeggings", "Steel Leggings", "res/steel_armor_leggings.png", 
 		ItemDefinition.new
@@ -151,9 +169,9 @@ function main()
 			}
 		)
 	)
-    log("Steel Mod: registered steelLeggings as id " .. tostring(leggingsId))
+    log("Steel Mod: registered steelLeggings as id " .. tostring(steelLeggingsId))
 
-	local bootsId = registerItem
+	local steelBootsId = registerItem
 	(
 		"steelBoots", "Steel Boots", "res/steel_armor_boots.png", 
 		ItemDefinition.new
@@ -165,5 +183,6 @@ function main()
 			}
 		)
 	)
-    log("Steel Mod: registered steelBoots as id " .. tostring(bootsId))
+    log("Steel Mod: registered steelBoots as id " .. tostring(steelBootsId))
+	
 end

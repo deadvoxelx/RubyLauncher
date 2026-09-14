@@ -71,6 +71,7 @@ namespace RubyLoader
 	bool resolveArmorTexture(const std::wstring &relativeName, std::wstring &drive, std::wstring &texturePath);
 	bool firePlayerBlockBreak(ServerPlayer *player, int x, int y, int z, int blockId, int blockAux);
 	bool firePlayerBlockPlace(ServerPlayer *player, int x, int y, int z, ItemInstance *item, int targetTile);
+	void fireItemCompleteUse(ItemInstance *item, ServerLevel *level, ServerPlayer *player);
 	void fireItemInteract(ItemInstance *item, ServerLevel *level, ServerPlayer *player);
 	void fireItemInteractEntity(ItemInstance *item, Entity *entity);
 	void firePlayerConnection(ServerPlayer *player);

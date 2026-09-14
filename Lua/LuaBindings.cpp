@@ -17,14 +17,17 @@
 #include "PlayerAbilitiesPacket.h"
 #include "ServerLevel.h"
 #include "Item.h"
+#include "MobEffect.h"
+#include "MobEffectInstance.h"
 
 #include "Registry/Item/ItemRegistry.h"
 #include "Registry/Item/ItemFactory.h"
 #include "Registry/Block/BlockRegistry.h"
 #include "Registry/IDs.h"
 
-#include "Server/Events/Item/ItemInteractEntityEvent.h"
+#include "Server/Events/Item/ItemCompleteUseEvent.h"
 #include "Server/Events/Item/ItemInteractEvent.h"
+#include "Server/Events/Item/ItemInteractEntityEvent.h"
 #include "Server/Events/Player/PlayerBlockBreakEvent.h"
 #include "Server/Events/Player/PlayerBlockPlaceEvent.h"
 #include "Server/Events/Player/PlayerConnectionEvent.h"
@@ -59,6 +62,35 @@ void LuaBindings::bindCommonFunctions(const std::vector<sol::state*> &luaStates)
             "pos", &LuaBlock::pos,
             "id", sol::property(&LuaBlock::getID),
             "oid", sol::property(&LuaBlock::getOID)
+        );
+
+        (*lua)["Effect"] = lua->create_table_with(
+            // Positive effects
+            "Speed",            MobEffect::movementSpeed->id,
+            "Haste",            MobEffect::digSpeed->id,
+            "Strength",         MobEffect::damageBoost->id,
+            "Healing",          MobEffect::heal->id,
+            "JumpBoost",        MobEffect::jump->id,
+            "Regeneration",     MobEffect::regeneration->id,
+            "Resistance",       MobEffect::damageResistance->id,
+            "FireResistance",   MobEffect::fireResistance->id,
+            "WaterBreathing",   MobEffect::waterBreathing->id,
+            "Invisibility",     MobEffect::invisibility->id,
+            "NightVision",      MobEffect::nightVision->id,
+            "HealthBoost",      MobEffect::healthBoost->id,
+            "Absorption",       MobEffect::absorption->id,
+            "Saturation",       MobEffect::saturation->id,
+
+            // Negative effects
+            "Slowness",         MobEffect::movementSlowdown->id,
+            "MiningFatigue",    MobEffect::digSlowdown->id,
+            "Harming",          MobEffect::harm->id,
+            "Nausea",           MobEffect::confusion->id,
+            "Blindness",        MobEffect::blindness->id,
+            "Hunger",           MobEffect::hunger->id,
+            "Weakness",         MobEffect::weakness->id,
+            "Poison",           MobEffect::poison->id,
+            "Wither",           MobEffect::wither->id
         );
     }
 }
@@ -143,6 +175,9 @@ void LuaBindings::bindServerEvents(sol::state& lua) {
         },
         "setHealth", [](ServerPlayer& player, int health) {
             player.setHealth(health);
+        },
+        "addEffect", [](ServerPlayer& player, int effectId, int durationTicks, int amplifier) {
+            player.addEffect(new MobEffectInstance(effectId, durationTicks, amplifier));
         },
         "pos", sol::property([](ServerPlayer& player) { return LuaVec3(player.x, player.y, player.z); }),
         "teleport", [](ServerPlayer& player, sol::object target, sol::this_state state) {
@@ -232,6 +267,13 @@ void LuaBindings::bindServerEvents(sol::state& lua) {
         "player", &PlayerBlockPlaceEvent::player,
         "block", &PlayerBlockPlaceEvent::block,
         sol::base_classes, sol::bases<CancellableRubyEvent, RubyEvent>()
+    );
+
+    lua.new_usertype<ItemCompleteUseEvent>("ItemConsumeEvent",
+        "item", &ItemCompleteUseEvent::item,
+        "player", &ItemCompleteUseEvent::player,
+        "itemId", &ItemCompleteUseEvent::itemId,
+        sol::base_classes, sol::bases<RubyEvent>()
     );
 
     lua.new_usertype<ItemInteractEvent>("ItemInteractEvent",
@@ -366,6 +408,7 @@ void LuaBindings::bindClientFunctions(sol::state& lua) {
         "nutrition", &ItemDefinition::nutrition,
         "saturationMod", &ItemDefinition::saturationMod,
         "isMeat", &ItemDefinition::isMeat,
+        "canAlwaysEat", &ItemDefinition::canAlwaysEat,
         "tier", &ItemDefinition::tier,
         "armorMaterial", &ItemDefinition::armorMaterial,
         "armorSet", &ItemDefinition::armorSet

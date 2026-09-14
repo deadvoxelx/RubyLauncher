@@ -123,6 +123,7 @@ struct ItemDefinition {
     int nutrition = 0;
     float saturationMod = 0.0;
     bool isMeat = false;
+    bool canAlwaysEat = false;
 
     // Tool Items
     const Item::Tier* tier = Item::Tier::WOOD;
@@ -137,12 +138,14 @@ struct ItemDefinition {
         sol::optional<int> n = items["nutrition"];
         sol::optional<float> s = items["saturationMod"];
         sol::optional<bool> meat = items["isMeat"];
+        sol::optional<bool> alwaysEat = items["canAlwaysEat"];
         sol::optional<Item::Tier*> t = items["tier"];
         sol::optional<std::string> armor = items["armorSet"];
 
         if (n) nutrition = n.value();
         if (s) saturationMod = s.value();
         if (meat) isMeat = meat.value();
+        if (alwaysEat) canAlwaysEat = alwaysEat.value();
         if (armor) armorSet = armor.value();
 
         if (items["armorMaterial"].is<int>()) {
@@ -179,7 +182,13 @@ public:
             case EBaseItem::Boots:
                 return (new ArmorItem(id, armorMaterialFor(def.armorMaterial), def.armorModelIndex, armorSlotFor(def.type)));
             case EBaseItem::Food:
-                return (new FoodItem(id,def.nutrition,def.saturationMod,def.isMeat));
+            {
+                FoodItem *food = new FoodItem(id,def.nutrition,def.saturationMod,def.isMeat);
+
+                if (def.canAlwaysEat) food->setCanAlwaysEat();
+
+                return food;
+            }
             case EBaseItem::Default:
             default:
                 return (new ModItem(id));

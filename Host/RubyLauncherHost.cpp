@@ -7,8 +7,9 @@
 #include "Common/EventSystem/EventBus.h"
 #include "Common/ModPaths.h"
 
-#include "Server/Events/Item/ItemInteractEntityEvent.h"
+#include "Server/Events/Item/ItemCompleteUseEvent.h"
 #include "Server/Events/Item/ItemInteractEvent.h"
+#include "Server/Events/Item/ItemInteractEntityEvent.h"
 #include "Server/Events/Player/PlayerBlockBreakEvent.h"
 #include "Server/Events/Player/PlayerBlockPlaceEvent.h"
 #include "Server/Events/Player/PlayerConnectionEvent.h"
@@ -296,6 +297,14 @@ bool RubyLoader::firePlayerBlockPlace(ServerPlayer *player, int x, int y, int z,
 
 	PlayerBlockPlaceEvent event(player, x, y, z, blockId);
 	return EventBus::Get().fire(event);
+}
+
+void RubyLoader::fireItemCompleteUse(ItemInstance *item, ServerLevel *level, ServerPlayer *player)
+{
+	if (item == nullptr || player == nullptr) return;
+
+	ItemCompleteUseEvent event(item, level, player, IDMapping::get()->getByID(item->id, item->getAuxValue()));
+    EventBus::Get().fire(event);
 }
 
 void RubyLoader::fireItemInteract(ItemInstance *item, ServerLevel *level, ServerPlayer *player)
