@@ -3,6 +3,8 @@
 #include "Loader.h"
 #include "Registry/IDs.h"
 #include "Registry/Item/ItemRegistry.h"
+#include "Registry/Recipe/RecipeRegistry.h"
+#include "Registry/WorldGen/OreFeatureRegistry.h"
 
 #include "Common/EventSystem/EventBus.h"
 #include "Common/ModPaths.h"
@@ -79,12 +81,10 @@ int RubyLoader::registerArmorSet(const std::string &setName, const std::string &
 
 	for (size_t i = 0; i < g_armorSets.size(); ++i)
 	{
-		if (g_armorSets[i].name == setName && g_armorSets[i].modFolder == modFolderName)
-			return ARMOR_SET_FIRST_INDEX + static_cast<int>(i);
+		if (g_armorSets[i].name == setName && g_armorSets[i].modFolder == modFolderName) return ARMOR_SET_FIRST_INDEX + static_cast<int>(i);
 	}
 
-	const bool hasOverlay = !RubyPaths::resolveModTexturePath(modFolderName, "armor/" + setName + "_1_b.png").empty()
-		|| !RubyPaths::resolveModTexturePath(modFolderName, setName + "_1_b.png").empty();
+	const bool hasOverlay = !RubyPaths::resolveModTexturePath(modFolderName, "armor/" + setName + "_1_b.png").empty() || !RubyPaths::resolveModTexturePath(modFolderName, setName + "_1_b.png").empty();
 
 	g_armorSets.push_back(ArmorSet{ setName, modFolderName, hasOverlay });
 	return ARMOR_SET_FIRST_INDEX + static_cast<int>(g_armorSets.size()) - 1;
@@ -158,6 +158,8 @@ void RubyLoader::onClientBoot()
 	g_loader->executeClientScripts("main");
 
 	onStringTableReloaded();
+
+	RecipeRegistry::finalize();
 }
 
 void RubyLoader::onStringTableReloaded()
@@ -172,10 +174,13 @@ void RubyLoader::onServerStart(MinecraftServer *server)
 	if (g_loader == nullptr) return;
 
 	EventBus::Get().clearListeners();
+	OreFeatureRegistry::reset();
 
 	g_loader->registerServerFunctions(server);
 	g_loader->refreshServerScripts();
 	g_loader->executeServerScripts("main");
+
+	OreFeatureRegistry::finalize();
 }
 
 int RubyLoader::getModCount()

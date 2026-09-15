@@ -14,10 +14,13 @@
 #include "sol/sol.hpp"
 
 #include "ModItem.h"
+#include "ArmorMaterialRegistry.h"
 
 enum EBaseItem {
     Default,
     Food,
+    Food_Fruit,
+    Food_Bread,
     Hoe,
     Weapon,
     Pickaxe,
@@ -27,7 +30,121 @@ enum EBaseItem {
     Chestplate,
     Leggings,
     Boots,
+    Ingot,
+    Stick,
 };
+
+enum EItemMaterial {
+    ItemMaterial_Undefined,
+    ItemMaterial_Wood,
+    ItemMaterial_Stone,
+    ItemMaterial_Iron,
+    ItemMaterial_Gold,
+    ItemMaterial_Diamond,
+    ItemMaterial_Cloth,
+    ItemMaterial_Chain,
+    ItemMaterial_Lapis,
+    ItemMaterial_Redstone,
+    ItemMaterial_Coal,
+    ItemMaterial_Emerald,
+    ItemMaterial_Quartz,
+    ItemMaterial_Glass,
+    ItemMaterial_Sand,
+    ItemMaterial_Brick,
+    ItemMaterial_Clay,
+    ItemMaterial_Snow,
+    ItemMaterial_Ice,
+    ItemMaterial_Glowstone,
+    ItemMaterial_Stick,
+    ItemMaterial_Paper,
+    ItemMaterial_Apple,
+    ItemMaterial_Nethanium,
+    ItemMaterial_Endorium,
+    ItemMaterial_Zanite,
+    ItemMaterial_Gravitite,
+    ItemMaterial_Aphal,
+    ItemMaterial_Nusa,
+};
+
+inline int itemMaterialFor(EItemMaterial material) {
+    switch (material) {
+        case ItemMaterial_Wood:      return Item::eMaterial_wood;
+        case ItemMaterial_Stone:     return Item::eMaterial_stone;
+        case ItemMaterial_Iron:      return Item::eMaterial_iron;
+        case ItemMaterial_Gold:      return Item::eMaterial_gold;
+        case ItemMaterial_Diamond:   return Item::eMaterial_diamond;
+        case ItemMaterial_Cloth:     return Item::eMaterial_cloth;
+        case ItemMaterial_Chain:     return Item::eMaterial_chain;
+        case ItemMaterial_Lapis:     return Item::eMaterial_lapis;
+        case ItemMaterial_Redstone:  return Item::eMaterial_redstone;
+        case ItemMaterial_Coal:      return Item::eMaterial_coal;
+        case ItemMaterial_Emerald:   return Item::eMaterial_emerald;
+        case ItemMaterial_Quartz:    return Item::eMaterial_quartz;
+        case ItemMaterial_Glass:     return Item::eMaterial_glass;
+        case ItemMaterial_Sand:      return Item::eMaterial_sand;
+        case ItemMaterial_Brick:     return Item::eMaterial_brick;
+        case ItemMaterial_Clay:      return Item::eMaterial_clay;
+        case ItemMaterial_Snow:      return Item::eMaterial_snow;
+        case ItemMaterial_Ice:       return Item::eMaterial_ice;
+        case ItemMaterial_Glowstone: return Item::eMaterial_glowstone;
+        case ItemMaterial_Stick:     return Item::eMaterial_stick;
+        case ItemMaterial_Paper:     return Item::eMaterial_paper;
+        case ItemMaterial_Apple:     return Item::eMaterial_apple;
+        case ItemMaterial_Nethanium: return Item::eMaterial_nethanium;
+        case ItemMaterial_Endorium:  return Item::eMaterial_endorium;
+        case ItemMaterial_Zanite:    return Item::eMaterial_zanite;
+        case ItemMaterial_Gravitite: return Item::eMaterial_gravitite;
+        case ItemMaterial_Aphal:     return Item::eMaterial_aphal;
+        case ItemMaterial_Nusa:      return Item::eMaterial_nusa;
+        case ItemMaterial_Undefined:
+        default:                     return Item::eMaterial_undefined;
+    }
+}
+
+inline int tierMaterialFor(const Item::Tier *tier) {
+    if (tier == Item::Tier::WOOD)      return Item::eMaterial_wood;
+    if (tier == Item::Tier::STONE)     return Item::eMaterial_stone;
+    if (tier == Item::Tier::IRON)      return Item::eMaterial_iron;
+    if (tier == Item::Tier::GOLD)      return Item::eMaterial_gold;
+    if (tier == Item::Tier::DIAMOND)   return Item::eMaterial_diamond;
+    if (tier == Item::Tier::NETHANIUM) return Item::eMaterial_nethanium;
+    if (tier == Item::Tier::ENDORIUM)  return Item::eMaterial_endorium;
+    if (tier == Item::Tier::ZANITE)    return Item::eMaterial_zanite;
+    if (tier == Item::Tier::GRAVITITE) return Item::eMaterial_gravitite;
+    if (tier == Item::Tier::VAMPIRE)   return Item::eMaterial_endorium;
+    if (tier == Item::Tier::VALKYRIE)  return Item::eMaterial_iron;
+    if (tier == Item::Tier::APHALAF)   return Item::eMaterial_aphal;
+    if (tier == Item::Tier::NUSA)      return Item::eMaterial_nusa;
+    return Item::eMaterial_undefined;
+}
+
+inline int craftingBaseItemTypeFor(EBaseItem type) {
+    switch (type) {
+        case EBaseItem::Weapon:     return Item::eBaseItemType_sword;
+        case EBaseItem::Shovel:     return Item::eBaseItemType_shovel;
+        case EBaseItem::Pickaxe:    return Item::eBaseItemType_pickaxe;
+        case EBaseItem::Hatchet:    return Item::eBaseItemType_hatchet;
+        case EBaseItem::Hoe:        return Item::eBaseItemType_hoe;
+        case EBaseItem::Ingot:      return Item::eBaseItemType_treasure;
+        case EBaseItem::Food_Fruit: return Item::eBaseItemType_giltFruit;
+        case EBaseItem::Food_Bread: return Item::eBaseItemType_bread;
+        case EBaseItem::Stick:      return Item::eBaseItemType_stick;
+        default:                    return Item::eBaseItemType_undefined;
+    }
+}
+
+inline bool isToolItem(EBaseItem type) {
+    switch (type) {
+        case EBaseItem::Weapon:
+        case EBaseItem::Pickaxe:
+        case EBaseItem::Hatchet:
+        case EBaseItem::Shovel:
+        case EBaseItem::Hoe:
+            return true;
+        default:
+            return false;
+    }
+}
 
 enum EItemTier {
     ItemTier_Wood,
@@ -127,11 +244,15 @@ struct ItemDefinition {
 
     // Tool Items
     const Item::Tier* tier = Item::Tier::WOOD;
+    int tierIndex = -1;
 
     // Armor Items
     EArmorMaterial armorMaterial = ArmorMaterial_Iron;
     std::string armorSet = "";
     int armorModelIndex = -1;
+    int armorMaterialIndex = -1;
+
+    EItemMaterial material = ItemMaterial_Undefined;
 
     ItemDefinition(sol::table items) {
         type = items["base"].get<EBaseItem>();
@@ -141,12 +262,20 @@ struct ItemDefinition {
         sol::optional<bool> alwaysEat = items["canAlwaysEat"];
         sol::optional<Item::Tier*> t = items["tier"];
         sol::optional<std::string> armor = items["armorSet"];
+        sol::optional<int> customTier = items["customTier"];
+        sol::optional<int> customArmor = items["customArmorMaterial"];
+
+        if (items["material"].is<int>()) {
+            material = items["material"].get<EItemMaterial>();
+        }
 
         if (n) nutrition = n.value();
         if (s) saturationMod = s.value();
         if (meat) isMeat = meat.value();
         if (alwaysEat) canAlwaysEat = alwaysEat.value();
         if (armor) armorSet = armor.value();
+        if (customTier) tierIndex = customTier.value();
+        if (customArmor) armorMaterialIndex = customArmor.value();
 
         if (items["armorMaterial"].is<int>()) {
             armorMaterial = items["armorMaterial"].get<EArmorMaterial>();
@@ -180,8 +309,14 @@ public:
             case EBaseItem::Chestplate:
             case EBaseItem::Leggings:
             case EBaseItem::Boots:
-                return (new ArmorItem(id, armorMaterialFor(def.armorMaterial), def.armorModelIndex, armorSlotFor(def.type)));
+            {
+                const ArmorItem::ArmorMaterial *material = ArmorMaterialRegistry::materialForIndex(def.armorMaterialIndex);
+                if (material == nullptr) material = armorMaterialFor(def.armorMaterial);
+                return (new ArmorItem(id, material, def.armorModelIndex, armorSlotFor(def.type)));
+            }
             case EBaseItem::Food:
+            case EBaseItem::Food_Fruit:
+            case EBaseItem::Food_Bread:
             {
                 FoodItem *food = new FoodItem(id,def.nutrition,def.saturationMod,def.isMeat);
 

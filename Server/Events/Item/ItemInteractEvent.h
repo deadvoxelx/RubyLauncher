@@ -10,8 +10,7 @@ struct ItemInteractEvent final : public RubyEvent {
     ServerLevel* level;
     ServerPlayer* player;
 
-
-    /* CactusModLoader [IMPL-AT] (Minecraft.World/Item/Item.cpp) */
+    /* Ruby Launcher [IMPL-AT] (Minecraft.World/Item/Item.cpp) */
     ItemInteractEvent(ItemInstance* item, ServerLevel* level, ServerPlayer* player) : item(item), level(level), player(player) {
         eventName = "PlayerItemInteractEvent";
     }

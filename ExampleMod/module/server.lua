@@ -25,4 +25,17 @@ function main()
     	end
 	)
 	
+	-- Ore Features
+	registerOreFeature
+	(
+		"steelOreFeature",								-- Feature ID
+		"steelMod:steelOre",							-- Placed block
+		{
+			size = 11,									-- Blocks per vein
+			target = "minecraft:stone",					-- Replaced block
+			dimension = 0,								-- Dimension (-999 for all)
+			yMin = 0, yMax = 64,						-- Min + max y
+			count = 8,									-- Average veins per chunk
+		}
+	)
 end

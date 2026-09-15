@@ -1,19 +1,61 @@
 function main()
+	-- Custom tool tiers
+	local steelTier = registerItemTier
+	(
+		"steel",
+		{
+			level = 2,						-- Same as iron
+			uses = 768,						-- Durability
+			speed = 7,						-- Dig speed
+			damage = 2,						-- Sword damage is 4 + damage, for Iron Swords this is 2, resulting in 6 damage
+			ench = 12						-- Enchantability
+		}
+	)
+	
+	-- Custom armor tiers
+	local steelArmorMaterial = registerArmorMaterial
+	(
+		"steel",
+		{
+			durabilityMultiplier = 22,		-- Durability multiplier/protection level; its complicated
+											-- For iron, its 15, for diamond, its 33; base off that logic
+			head = 2,						-- Helmet armor points
+			torso = 6,						-- Chestplate armor points
+			legs = 5,						-- Leggings armor points
+			feet = 2,						-- Boots armor points
+			ench = 12						-- Enchantability
+		}
+	)
+
     -- Blocks
     local steelBlockId = registerBlock
 	(	-- ID --		-- Name --		-- Texture --
-		"steelBlock", "Steel Block", "res/steel_block.png", 
+		"steelBlock", "Steel Block", "res/steel_block.png",
 		BlockDefinition.new
 		(
 			{
-				hardness = 5.0, 
-				resistance = 15.0, 
+				hardness = 5.0,
+				resistance = 15.0,
 				tool = EBlockTool.Pickaxe
 			}
 		)
 	)
     log("Steel Mod: registered steelBlock as id " .. tostring(steelBlockId))
-
+	
+	local steelOreId = registerBlock
+	(
+		"steelOre", "Carbonated Iron Ore", "res/carbon_iron_ore.png",
+		BlockDefinition.new
+		(
+			{
+				hardness = 3.0,
+				resistance = 10.0,
+				tool = EBlockTool.Pickaxe
+			}
+		)
+	)
+    log("Steel Mod: registered steelOre as id " .. tostring(steelOreId))
+	
 	-- Basic Items
     local steelIngotId = registerItem
 	(
@@ -21,7 +63,8 @@ function main()
 		ItemDefinition.new
 		(
 			{
-				base = EBaseItem.Default
+				base = EBaseItem.Ingot,						-- Defines the crafting category basically
+				material = EItemMaterial.Iron				-- Ill explain this on the wiki
 			}
 		)
 	)
@@ -35,10 +78,10 @@ function main()
 		ItemDefinition.new
 		(
 			{
-				base = EBaseItem.Food, 
-				nutrition = 4, 
-				saturationMod = 0.3, 
-				isMeat = false
+				base = EBaseItem.Food_Fruit,
+				nutrition = 4,
+				saturationMod = 0.3,
+				isMeat = false,
 				canAlwaysEat = true
 			}
 		)
@@ -51,10 +94,10 @@ function main()
 		ItemDefinition.new
 		(
 			{
-				base = EBaseItem.Food, 
-				nutrition = 4, 
-				saturationMod = 0.6, 
-				isMeat = false, 
+				base = EBaseItem.Food_Fruit,
+				nutrition = 4,
+				saturationMod = 0.6,
+				isMeat = false,
 				canAlwaysEat = true
 				-- The food effects are handled in server.lua
 			}
@@ -69,8 +112,10 @@ function main()
 		ItemDefinition.new
 		(
 			{
-				base = EBaseItem.Weapon, 
-				tier = EItemTier.Iron
+				base = EBaseItem.Weapon,
+				--tier = EItemTier.Iron						-- Use this for a vanilla tier
+				customTier = steelTier, 					-- This is for custom tiers
+				material = EItemMaterial.Iron
 			}
 		)
 	)
@@ -83,7 +128,8 @@ function main()
 		(
 			{
 				base = EBaseItem.Hatchet, 
-				tier = EItemTier.Iron
+				customTier = steelTier, 
+				material = EItemMaterial.Iron
 			}
 		)
 	)
@@ -96,7 +142,8 @@ function main()
 		(
 			{
 				base = EBaseItem.Pickaxe, 
-				tier = EItemTier.Iron
+				customTier = steelTier, 
+				material = EItemMaterial.Iron
 			}
 		)
 	)
@@ -109,7 +156,8 @@ function main()
 		(
 			{
 				base = EBaseItem.Shovel, 
-				tier = EItemTier.Iron
+				customTier = steelTier, 
+				material = EItemMaterial.Iron
 			}
 		)
 	)
@@ -122,7 +170,8 @@ function main()
 		(
 			{
 				base = EBaseItem.Hoe, 
-				tier = EItemTier.Iron
+				customTier = steelTier, 
+				material = EItemMaterial.Iron
 			}
 		)
 	)
@@ -136,8 +185,9 @@ function main()
 		(
 			{
 				base = EBaseItem.Helmet, 
-				armorMaterial = EArmorMaterial.Iron, 
-				armorSet = "steel"
+				armorSet = "steel", 
+				--armorMaterial = EArmorMaterial.Iron, 				-- Use this for vanilla armor tiers
+				customArmorMaterial = steelArmorMaterial			-- This is for custom armor tiers
 			}
 		)
 	)
@@ -150,8 +200,8 @@ function main()
 		(
 			{
 				base = EBaseItem.Chestplate, 
-				armorMaterial = EArmorMaterial.Iron, 
-				armorSet = "steel"
+				armorSet = "steel", 
+				customArmorMaterial = steelArmorMaterial
 			}
 		)
 	)
@@ -164,8 +214,8 @@ function main()
 		(
 			{
 				base = EBaseItem.Leggings, 
-				armorMaterial = EArmorMaterial.Iron, 
-				armorSet = "steel"
+				armorSet = "steel", 
+				customArmorMaterial = steelArmorMaterial
 			}
 		)
 	)
@@ -178,11 +228,171 @@ function main()
 		(
 			{
 				base = EBaseItem.Boots, 
-				armorMaterial = EArmorMaterial.Iron, 
-				armorSet = "steel"
+				armorSet = "steel", 
+				customArmorMaterial = steelArmorMaterial
 			}
 		)
 	)
     log("Steel Mod: registered steelBoots as id " .. tostring(steelBootsId))
+
+	-- Crafting recipes
+	registerShapelessRecipe
+	(
+		"steelIngotRecipe",									-- Recipe ID
+		{ "steelMod:steelBlock" }, 							-- Ingredient
+		"steelMod:steelIngot", 								-- Result
+		{ count = 9, group = ERecipeGroup.Decoration }		-- Count and group
+	)
+
+	registerShapedRecipe
+	(
+		"steelBlockRecipe",									-- Recipe ID
+		{													-- Recipe pattern
+			"SSS",
+			"SSS",
+			"SSS"
+		}, 
+		{ S = "steelMod:steelIngot" },						-- Ingredient
+		"steelMod:steelBlock",								-- Result
+		{ count = 1, group = ERecipeGroup.Structure }		-- Count and group
+	)
+
+	registerShapedRecipe
+	(
+		"steelAppleRecipe",
+		{
+			"SSS",
+			"SAS",
+			"SSS"
+		}, 
+		{ S = "steelMod:steelIngot", A = "minecraft:apple" },
+		"steelMod:steelApple",
+		{ count = 1, group = ERecipeGroup.Food }
+	)
 	
+	registerShapedRecipe
+	(
+		"steelSwordRecipe",
+		{
+			" S ",
+			" S ",
+			" I "
+		}, 
+		{ S = "steelMod:steelIngot", I = "minecraft:stick" },
+		"steelMod:steelSword",
+		{ count = 1, group = ERecipeGroup.Tool }
+	)
+	
+	registerShapedRecipe
+	(
+		"steelAxeRecipe",
+		{
+			"SS ",
+			"SI ",
+			" I "
+		}, 
+		{ S = "steelMod:steelIngot", I = "minecraft:stick" },
+		"steelMod:steelAxe",
+		{ count = 1, group = ERecipeGroup.Tool }
+	)
+	
+	registerShapedRecipe
+	(
+		"steelPickaxeRecipe",
+		{
+			"SSS",
+			" I ",
+			" I "
+		}, 
+		{ S = "steelMod:steelIngot", I = "minecraft:stick" },
+		"steelMod:steelPickaxe",
+		{ count = 1, group = ERecipeGroup.Tool }
+	)
+	
+	registerShapedRecipe
+	(
+		"steelShovelRecipe",
+		{
+			" S ",
+			" I ",
+			" I "
+		}, 
+		{ S = "steelMod:steelIngot", I = "minecraft:stick" },
+		"steelMod:steelShovel",
+		{ count = 1, group = ERecipeGroup.Tool }
+	)
+	
+	registerShapedRecipe
+	(
+		"steelHoeRecipe",
+		{
+			"SS ",
+			" I ",
+			" I "
+		}, 
+		{ S = "steelMod:steelIngot", I = "minecraft:stick" },
+		"steelMod:steelHoe",
+		{ count = 1, group = ERecipeGroup.Tool }
+	)
+	
+	registerShapedRecipe
+	(
+		"steelHelmetRecipe",
+		{
+			"SSS",
+			"S S"
+		}, 
+		{ S = "steelMod:steelIngot" },
+		"steelMod:steelHelmet",
+		{ count = 1, group = ERecipeGroup.Armour }
+	)
+	
+	registerShapedRecipe
+	(
+		"steelChestplateRecipe",
+		{
+			"S S",
+			"SSS",
+			"SSS"
+		}, 
+		{ S = "steelMod:steelIngot" },
+		"steelMod:steelChestplate",
+		{ count = 1, group = ERecipeGroup.Armour }
+	)
+	
+	registerShapedRecipe
+	(
+		"steelLeggingsRecipe",
+		{
+			"SSS",
+			"S S",
+			"S S"
+		}, 
+		{ S = "steelMod:steelIngot" },
+		"steelMod:steelLeggings",
+		{ count = 1, group = ERecipeGroup.Armour }
+	)
+	
+	registerShapedRecipe
+	(
+		"steelBootsRecipe",
+		{
+			"S S",
+			"S S"
+		}, 
+		{ S = "steelMod:steelIngot" },
+		"steelMod:steelBoots",
+		{ count = 1, group = ERecipeGroup.Armour }
+	)
+
+	-- Smelting recipe
+	registerSmeltingRecipe
+	(
+		"steelIngotSmelt",										-- Recipe ID
+		"steelMod:steelOre",									-- Input
+		"steelMod:steelIngot",									-- Output
+		{ count = 1, xp = 0.7 }									-- Count and xp
+	)
+	
+	log("Steel Mod: registered all recipes")
 end

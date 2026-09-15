@@ -8,6 +8,21 @@
 #include "RubyEvent.h"
 #include "sol/sol.hpp"
 
+inline std::string safeLuaErrorText(const sol::protected_function_result& result)
+{
+	lua_State* L = result.lua_state();
+	if (L == nullptr) return "(no lua state)";
+
+	const int idx = result.stack_index();
+	if (idx == 0) return "(no error value)";
+	if (result.return_count() <= 0) return "(no error value)";
+
+	const char* text = lua_tolstring(L, idx, nullptr);
+	if (text != nullptr) return std::string(text);
+
+	return "(non-string error of type " + std::string(lua_typename(L, lua_type(L, idx))) + ")";
+}
+
 class EventBus {
 public:
     using Listener = sol::protected_function;
@@ -36,8 +51,7 @@ public:
             auto result = fn(&event);
 
             if (!result.valid()) {
-                sol::error err = result;
-                fprintf(stderr, "[Lua] Error in '%s' listener: %s\n", event.eventName.c_str(), err.what());
+                fprintf(stderr, "[Lua] Error in '%s' listener: %s\n", event.eventName.c_str(), safeLuaErrorText(result).c_str());
                 continue;
             }
 

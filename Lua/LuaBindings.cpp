@@ -2,6 +2,8 @@
 #include "Common/ModPaths.h"
 #include "Loader.h"
 
+#include <map>
+
 #include "ServerPlayerGameMode.h"
 #include "ServerPlayer.h"
 #include "PlayerList.h"
@@ -23,6 +25,10 @@
 #include "Registry/Item/ItemRegistry.h"
 #include "Registry/Item/ItemFactory.h"
 #include "Registry/Block/BlockRegistry.h"
+#include "Registry/Recipe/RecipeRegistry.h"
+#include "Registry/WorldGen/OreFeatureRegistry.h"
+#include "Registry/Item/TierRegistry.h"
+#include "Registry/Item/ArmorMaterialRegistry.h"
 #include "Registry/IDs.h"
 
 #include "Server/Events/Item/ItemCompleteUseEvent.h"
@@ -38,6 +44,112 @@
 #include "Common/RubyUtils.h"
 #include "LuaStructs.h"
 
+namespace
+{
+	void readRecipeOptions(sol::object options, int &count, int &aux, RecipeRegistry::Group &group)
+	{
+		count = 1;
+		aux = -1;
+		group = Recipy::eGroupType_Decoration;
+
+		if (!options.valid() || !options.is<sol::table>()) return;
+
+		sol::table table = options.as<sol::table>();
+
+		sol::optional<int> countValue = table["count"];
+		if (countValue && countValue.value() > 0) count = countValue.value();
+
+		sol::optional<int> auxValue = table["aux"];
+		if (auxValue && auxValue.value() >= 0) aux = auxValue.value();
+
+		sol::optional<RecipeRegistry::Group> enumGroup = table["group"];
+		if (enumGroup)
+		{
+			const int value = static_cast<int>(enumGroup.value());
+			if (value >= Recipy::eGroupType_First && value < Recipy::eGroupType_Max)
+			{
+				group = static_cast<RecipeRegistry::Group>(value);
+			}
+			else
+			{
+				Loader::_debugPrint("recipe: unknown crafting group " + std::to_string(value) + ", using Decoration");
+			}
+			return;
+		}
+
+		sol::optional<int> groupValue = table["group"];
+		if (groupValue)
+		{
+			const int value = groupValue.value();
+			if (value >= Recipy::eGroupType_First && value < Recipy::eGroupType_Max)
+			{
+				group = static_cast<RecipeRegistry::Group>(value);
+			}
+			else
+			{
+				Loader::_debugPrint("recipe: unknown crafting group " + std::to_string(value) + ", using Decoration");
+			}
+		}
+	}
+
+	bool luaStringArrayToVector(sol::object value, std::vector<std::string> &out, const char *context)
+	{
+		if (!value.is<sol::table>())
+		{
+			Loader::_debugPrint(std::string(context) + ": expected a table of strings");
+			return false;
+		}
+		lua_State *L = value.lua_state();
+		value.push();
+		const int tableIndex = lua_gettop(L);
+		const lua_Unsigned n = lua_rawlen(L, tableIndex);
+		out.reserve(static_cast<size_t>(n));
+		for (lua_Unsigned i = 1; i <= n; ++i)
+		{
+			lua_rawgeti(L, tableIndex, static_cast<lua_Integer>(i));
+			if (lua_type(L, -1) != LUA_TSTRING)
+			{
+				lua_pop(L, 1);
+				lua_pop(L, 1);
+				Loader::_debugPrint(std::string(context) + ": entry " + std::to_string(i) + " must be a string");
+				return false;
+			}
+			out.emplace_back(lua_tostring(L, -1));
+			lua_pop(L, 1);
+		}
+		lua_pop(L, 1);
+		return true;
+	}
+
+	bool luaTableToStringMap(sol::object value, std::map<std::string, std::string> &out, const char *context)
+	{
+		if (!value.is<sol::table>())
+		{
+			Loader::_debugPrint(std::string(context) + ": expected a key table");
+			return false;
+		}
+		lua_State *L = value.lua_state();
+		value.push();
+		lua_pushnil(L);
+		while (lua_next(L, -2) != 0)
+		{
+			if (lua_type(L, -2) == LUA_TSTRING && lua_type(L, -1) == LUA_TSTRING)
+			{
+				out[lua_tostring(L, -2)] = lua_tostring(L, -1);
+			}
+			else
+			{
+				Loader::_debugPrint(std::string(context) + ": keys and values must be strings");
+				lua_pop(L, 2);
+				lua_pop(L, 1);
+				return false;
+			}
+			lua_pop(L, 1);
+		}
+		lua_pop(L, 1);
+		return true;
+	}
+}
 
 void LuaBindings::bindCommonFunctions(const std::vector<sol::state*> &luaStates) {
     for (sol::state* lua : luaStates) {
@@ -92,6 +204,39 @@ void LuaBindings::bindCommonFunctions(const std::vector<sol::state*> &luaStates)
             "Poison",           MobEffect::poison->id,
             "Wither",           MobEffect::wither->id
         );
+
+        lua->set_function("registerOreFeature", [](sol::this_environment env, const std::string &oreId, const std::string &block, sol::optional<sol::object> options) -> bool
+        {
+            sol::environment& modEnv = env;
+            std::string modId = modEnv["modId"];
+
+            int size = 8, dimension = OreFeatureRegistry::DIMENSION_ALL, yMin = 0, yMax = Level::genDepth, count = 8;
+            std::string target = "minecraft:stone";
+
+            if (options.has_value() && options->valid() && options->is<sol::table>())
+            {
+                sol::table t = options->as<sol::table>();
+
+                sol::optional<int> sizeValue = t["size"];
+                if (sizeValue && sizeValue.value() > 0) size = sizeValue.value();
+
+                sol::optional<int> dimensionValue = t["dimension"];
+                if (dimensionValue) dimension = dimensionValue.value();
+
+                sol::optional<int> yMinValue = t["yMin"];
+                if (yMinValue && yMinValue.value() >= 0) yMin = yMinValue.value();
+
+                sol::optional<int> yMaxValue = t["yMax"];
+                if (yMaxValue && yMaxValue.value() > 0) yMax = yMaxValue.value();
+
+                sol::optional<int> countValue = t["count"];
+                if (countValue && countValue.value() > 0) count = countValue.value();
+
+                sol::optional<std::string> targetValue = t["target"];
+                if (targetValue && !targetValue.value().empty()) target = targetValue.value();
+            }
+            return OreFeatureRegistry::registerOre(modId, oreId, block, size, target, dimension, yMin, yMax, count);
+        });
     }
 }
 
@@ -371,7 +516,10 @@ void LuaBindings::bindClientFunctions(sol::state& lua) {
         {"Helmet", EBaseItem::Helmet},
         {"Chestplate", EBaseItem::Chestplate},
         {"Leggings", EBaseItem::Leggings},
-        {"Boots", EBaseItem::Boots}
+        {"Boots", EBaseItem::Boots},
+        {"Ingot", EBaseItem::Ingot},
+        {"Food_Fruit", EBaseItem::Food_Fruit},
+        {"Food_Bread", EBaseItem::Food_Bread}
     });
 
     lua.new_enum<EArmorMaterial>("EArmorMaterial", {
@@ -402,6 +550,38 @@ void LuaBindings::bindClientFunctions(sol::state& lua) {
         {"Nusa", ItemTier_Nusa}
     });
 
+    lua.new_enum<EItemMaterial>("EItemMaterial", {
+        {"Undefined", ItemMaterial_Undefined},
+        {"Wood",      ItemMaterial_Wood},
+        {"Stone",     ItemMaterial_Stone},
+        {"Iron",      ItemMaterial_Iron},
+        {"Gold",      ItemMaterial_Gold},
+        {"Diamond",   ItemMaterial_Diamond},
+        {"Cloth",     ItemMaterial_Cloth},
+        {"Chain",     ItemMaterial_Chain},
+        {"Lapis",     ItemMaterial_Lapis},
+        {"Redstone",  ItemMaterial_Redstone},
+        {"Coal",      ItemMaterial_Coal},
+        {"Emerald",   ItemMaterial_Emerald},
+        {"Quartz",    ItemMaterial_Quartz},
+        {"Glass",     ItemMaterial_Glass},
+        {"Sand",      ItemMaterial_Sand},
+        {"Brick",     ItemMaterial_Brick},
+        {"Clay",      ItemMaterial_Clay},
+        {"Snow",      ItemMaterial_Snow},
+        {"Ice",       ItemMaterial_Ice},
+        {"Glowstone", ItemMaterial_Glowstone},
+        {"Stick",     ItemMaterial_Stick},
+        {"Paper",     ItemMaterial_Paper},
+        {"Apple",     ItemMaterial_Apple},
+        {"Nethanium", ItemMaterial_Nethanium},
+        {"Endorium",  ItemMaterial_Endorium},
+        {"Zanite",    ItemMaterial_Zanite},
+        {"Gravitite", ItemMaterial_Gravitite},
+        {"Aphal",     ItemMaterial_Aphal},
+        {"Nusa",      ItemMaterial_Nusa}
+    });
+
     lua.new_usertype<ItemDefinition>("ItemDefinition",
         sol::constructors<ItemDefinition(sol::table)>(),
         "type", &ItemDefinition::type,
@@ -411,7 +591,8 @@ void LuaBindings::bindClientFunctions(sol::state& lua) {
         "canAlwaysEat", &ItemDefinition::canAlwaysEat,
         "tier", &ItemDefinition::tier,
         "armorMaterial", &ItemDefinition::armorMaterial,
-        "armorSet", &ItemDefinition::armorSet
+        "armorSet", &ItemDefinition::armorSet,
+        "material", &ItemDefinition::material
     );
 
     lua.new_usertype<Item::Tier>("Tier",
@@ -468,4 +649,114 @@ void LuaBindings::bindClientFunctions(sol::state& lua) {
         }
         return registeredBlock;
     });
+
+    lua.new_enum<RecipeRegistry::Group>("ERecipeGroup", {
+        {"Structure",  Recipy::eGroupType_Structure},
+        {"Tool",       Recipy::eGroupType_Tool},
+        {"Food",       Recipy::eGroupType_Food},
+        {"Armour",     Recipy::eGroupType_Armour},
+        {"Mechanism",  Recipy::eGroupType_Mechanism},
+        {"Transport",  Recipy::eGroupType_Transport},
+        {"Decoration", Recipy::eGroupType_Decoration}
+    });
+	lua.set_function("registerShapedRecipe", [](sol::this_environment env, const std::string &recipeId, sol::object pattern, sol::object key, const std::string &result, sol::optional<sol::object> options) -> bool
+	{
+		std::vector<std::string> patternList;
+		std::map<std::string, std::string> keyMap;
+		if (!luaStringArrayToVector(pattern, patternList, "registerShapedRecipe: pattern")) return false;
+		if (patternList.empty())
+		{
+			return false;
+		}
+		if (!luaTableToStringMap(key, keyMap, "registerShapedRecipe: key")) return false;
+
+		sol::environment& modEnv = env;
+		std::string modId = modEnv["modId"];
+
+		int count = 1;
+		int aux = -1;
+		RecipeRegistry::Group group = Recipy::eGroupType_Decoration;
+		if (options.has_value()) readRecipeOptions(options.value(), count, aux, group);
+
+		return RecipeRegistry::registerShaped(modId, recipeId, patternList, keyMap, result, count, aux, group);
+	});
+	lua.set_function("registerShapelessRecipe", [](sol::this_environment env, const std::string &recipeId, sol::object ingredients, const std::string &result, sol::optional<sol::object> options) -> bool
+	{
+		std::vector<std::string> ingredientList;
+		if (!luaStringArrayToVector(ingredients, ingredientList, "registerShapelessRecipe: ingredients")) return false;
+		if (ingredientList.empty())
+		{
+			return false;
+		}
+
+		sol::environment& modEnv = env;
+		std::string modId = modEnv["modId"];
+
+		int count = 1;
+		int aux = -1;
+		RecipeRegistry::Group group = Recipy::eGroupType_Decoration;
+		if (options.has_value()) readRecipeOptions(options.value(), count, aux, group);
+
+		return RecipeRegistry::registerShapeless(modId, recipeId, ingredientList, result, count, aux, group);
+	});
+
+    lua.set_function("registerSmeltingRecipe", [](sol::this_environment env, const std::string &recipeId, const std::string &input, const std::string &result, sol::optional<sol::object> options) -> bool
+    {
+        sol::environment& modEnv = env;
+        std::string modId = modEnv["modId"];
+
+        int count = 1;
+        float xp = 0.0f;
+        if (options.has_value() && options->valid() && options->is<sol::table>())
+        {
+            sol::table table = options->as<sol::table>();
+
+            sol::optional<int> countValue = table["count"];
+            if (countValue && countValue.value() > 0) count = countValue.value();
+
+            sol::optional<float> xpValue = table["xp"];
+            if (xpValue && xpValue.value() >= 0.0f) xp = xpValue.value();
+        }
+
+        return RecipeRegistry::registerSmelting(modId, recipeId, input, result, count, xp);
+    });
+
+    lua.set_function("registerItemTier", [](sol::this_environment env, const std::string &tierId,
+        sol::optional<sol::object> options) -> int
+    {
+        sol::environment& modEnv = env;
+        std::string modId = modEnv["modId"];
+        int level = 1, uses = 250, ench = 14;
+        float speed = 6.0f, damage = 2.0f;
+        if (options.has_value() && options->valid() && options->is<sol::table>())
+        {
+            sol::table t = options->as<sol::table>();
+            sol::optional<int>   lv = t["level"];    if (lv)  level  = lv.value();
+            sol::optional<int>   us = t["uses"];     if (us)  uses   = us.value();
+            sol::optional<float> sp = t["speed"];    if (sp)  speed  = sp.value();
+            sol::optional<float> dm = t["damage"];   if (dm)  damage = dm.value();
+            sol::optional<int>   en = t["ench"];     if (en)  ench   = en.value();
+        }
+        return TierRegistry::registerTier(modId, tierId, level, uses, speed, damage, ench);
+    });
+
+    lua.set_function("registerArmorMaterial", [](sol::this_environment env, const std::string &materialId,
+        sol::optional<sol::object> options) -> int
+    {
+        sol::environment& modEnv = env;
+        std::string modId = modEnv["modId"];
+        int durabilityMultiplier = 15, head = 2, torso = 6, legs = 5, feet = 2, ench = 10;
+        if (options.has_value() && options->valid() && options->is<sol::table>())
+        {
+            sol::table t = options->as<sol::table>();
+            sol::optional<int> dm = t["durabilityMultiplier"]; if (dm) durabilityMultiplier = dm.value();
+            sol::optional<int> hp = t["head"];                 if (hp) head = hp.value();
+            sol::optional<int> tp = t["torso"];                if (tp) torso = tp.value();
+            sol::optional<int> lp = t["legs"];                 if (lp) legs = lp.value();
+            sol::optional<int> fp = t["feet"];                 if (fp) feet = fp.value();
+            sol::optional<int> en = t["ench"];                 if (en) ench = en.value();
+        }
+        return ArmorMaterialRegistry::registerMaterial(modId, materialId, durabilityMultiplier, head, torso, legs, feet, ench);
+    });
+
 }

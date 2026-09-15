@@ -8,18 +8,14 @@
 #include "Loader.h"
 #include "ModItem.h"
 #include "Registry/IDs.h"
+#include "TierRegistry.h"
 
 std::map<int, std::wstring> ItemRegistry::langList;
 int ItemRegistry::itemNameIdMax = 2444;
-int ItemRegistry::itemIdMax = 812;
-
+int ItemRegistry::itemIdMax = 8191;		// Changing this so mod items start at ID 8192
+										// Im never adding that many items to the base lmao
 namespace
 {
-	bool isReservedItemId(int id)
-	{
-		return (id >= 256 && id < 512) || (id >= 2256 && id < 2268);
-	}
-
 	int useDescriptionFor(EBaseItem type)
 	{
 		switch (type)
@@ -35,14 +31,19 @@ namespace
 		case EBaseItem::Hoe:
 			return IDS_DESC_HOE;
 		case EBaseItem::Helmet:
-			return IDS_DESC_HELMET_LEATHER;
+			return IDS_DESC_HELMET;
 		case EBaseItem::Chestplate:
-			return IDS_DESC_CHESTPLATE_LEATHER;
+			return IDS_DESC_CHESTPLATE;
 		case EBaseItem::Leggings:
-			return IDS_DESC_LEGGINGS_LEATHER;
+			return IDS_DESC_LEGGINGS;
 		case EBaseItem::Boots:
-			return IDS_DESC_BOOTS_LEATHER;
+			return IDS_DESC_BOOTS;
 		case EBaseItem::Food:
+			return IDS_DESC_APPLE;
+		case EBaseItem::Food_Bread:
+			return IDS_DESC_BREAD;
+		case EBaseItem::Food_Fruit:
+			return IDS_DESC_APPLE;
 		case EBaseItem::Default:
 		default:
 			return IDS_DESC_STICK;
@@ -53,8 +54,6 @@ namespace
 	{
 		switch (type)
 		{
-		case EBaseItem::Food:
-			return RubyCreativeGroup_Food;
 		case EBaseItem::Weapon:
 		case EBaseItem::Hoe:
 		case EBaseItem::Pickaxe:
@@ -65,6 +64,10 @@ namespace
 		case EBaseItem::Leggings:
 		case EBaseItem::Boots:
 			return RubyCreativeGroup_Tools;
+		case EBaseItem::Food:
+		case EBaseItem::Food_Fruit:
+		case EBaseItem::Food_Bread:
+			return RubyCreativeGroup_Food;
 		case EBaseItem::Default:
 		default:
 			return RubyCreativeGroup_Materials;
@@ -123,7 +126,7 @@ int ItemRegistry::nextItemNameId() {
 int ItemRegistry::nextItemId() {
     do {
         itemIdMax += 1;
-    } while (itemIdMax < Item::ITEM_NUM_COUNT && (isReservedItemId(itemIdMax) || Item::items[itemIdMax] != nullptr));
+    } while (itemIdMax < Item::ITEM_NUM_COUNT && (Item::items[itemIdMax] != nullptr));
 
     return itemIdMax;
 }
@@ -145,6 +148,13 @@ int ItemRegistry::registerItem(const std::wstring& path, const std::string& id, 
     if (isArmor)
     {
         resolved.armorModelIndex = RubyLoader::registerArmorSet(def.armorSet, RubyPaths::toNarrow(path), vanillaArmorModelIndex(def.armorMaterial));
+    }
+
+	if (resolved.tierIndex >= 0)
+    {
+        const Item::Tier *tier = TierRegistry::tierForIndex(resolved.tierIndex);
+        if (tier != nullptr) resolved.tier = tier;
+        else Loader::_debugPrint("item '" + id + "': unknown custom tier handle " + std::to_string(resolved.tierIndex));
     }
 
     Item *item = ItemFactory::create(resolved, itemId - 512);
@@ -175,9 +185,29 @@ int ItemRegistry::registerItem(const std::wstring& path, const std::string& id, 
     {
         item->setBaseItemTypeAndMaterial(baseItemTypeFor(def.type), armorMaterialTypeFor(def.armorMaterial));
     }
+    else if (def.type == EBaseItem::Food_Fruit || def.type == EBaseItem::Food_Bread)
+    {
+        const int material = (def.material != ItemMaterial_Undefined) ? itemMaterialFor(def.material) : (def.type == EBaseItem::Food_Bread ? Item::eMaterial_bread : Item::eMaterial_apple);
+        item->setBaseItemTypeAndMaterial(craftingBaseItemTypeFor(def.type), material);
+    }
+    else if (isToolItem(def.type))
+    {
+        const int material = (def.material != ItemMaterial_Undefined) ? itemMaterialFor(def.material) : tierMaterialFor(def.tier);
+        item->setBaseItemTypeAndMaterial(craftingBaseItemTypeFor(def.type), material);
+    }
+    else if (def.type == EBaseItem::Ingot)
+    {
+        const int material = (def.material != ItemMaterial_Undefined) ? itemMaterialFor(def.material) : Item::eMaterial_iron;
+        item->setBaseItemTypeAndMaterial(Item::eBaseItemType_treasure, material);
+    }
     else
     {
         item->handEquipped();
+
+        if (def.type == EBaseItem::Default && def.material != ItemMaterial_Undefined)
+        {
+            item->setBaseItemTypeAndMaterial(Item::eBaseItemType_treasure, itemMaterialFor(def.material));
+        }
     }
 
     langList[nameId] = wname;

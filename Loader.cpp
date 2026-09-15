@@ -7,6 +7,7 @@
 #include <string>
 
 #include "Common/ModPaths.h"
+#include "Common/EventSystem/EventBus.h"
 #include "Lua/LuaBindings.h"
 
 class MinecraftServer;
@@ -136,8 +137,7 @@ void Loader::refresh(sol::state& luaState,std::string_view (RubyMod::*getEntry)(
             }
             _debugPrint(modId + "'s '" + modEntry + "' has been loaded successfully");
         } else {
-            sol::error err = result;
-            _debugPrint("Lua error in '"+folderName+"/"+modEntry+"' error: "+err.what());
+            _debugPrint("Lua error in '"+folderName+"/"+modEntry+"' error: "+safeLuaErrorText(result));
             failedMods.push_back(mod);
         }
     }
@@ -168,8 +168,7 @@ void Loader::execute(sol::environment& (RubyMod::*getEnv)(), std::string funcNam
         if (fn.valid()) {
             auto result = fn();
             if (!result.valid()) {
-                sol::error err = result;
-                _debugPrint(("Error in '"+modName+"': "+err.what()).c_str());
+                _debugPrint(("Error in '"+modName+"': "+safeLuaErrorText(result)).c_str());
             }
         } else {
             if (warn) _debugPrint(("Mod "+modName+" must have a '"+funcName+"()' function in its global table, 'function "+modName+"."+funcName+"()' is missing"));
