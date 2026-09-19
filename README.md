@@ -6,16 +6,15 @@ Ruby Launcher allows you to mod LCE using lua scripting.
 # Scope
 The scope of this project is to have a fork-agnostic and cross-platform Mod Loader for LCE
 
-Goals: 
+Features: 
 
-* Add custom block and item registration with custom textures (implemented)
-* Event system (implemented)
-* Client and server modding using LUA scripting (implemented)
-* Allow for modding the UI
-* Custom generation and dimensions
-* Port Cactus ModLoader to Minecraft Java Edition
-* String ID system for items and blocks (implemented)
-* More...
+* String ID system for items and blocks.
+* Custom blocks.
+* Custom items.
+* Custom ore features.
+* Custom tree features.
+* Custom crafting + smelting recipes.
+* Server event system.
 
 # Building
 ### Dependencies
