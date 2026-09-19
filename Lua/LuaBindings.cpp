@@ -25,8 +25,10 @@
 #include "Registry/Item/ItemRegistry.h"
 #include "Registry/Item/ItemFactory.h"
 #include "Registry/Block/BlockRegistry.h"
+#include "Registry/Block/SaplingRegistry.h"
 #include "Registry/Recipe/RecipeRegistry.h"
 #include "Registry/WorldGen/OreFeatureRegistry.h"
+#include "Registry/WorldGen/TreeFeatureRegistry.h"
 #include "Registry/Item/TierRegistry.h"
 #include "Registry/Item/ArmorMaterialRegistry.h"
 #include "Registry/IDs.h"
@@ -236,6 +238,36 @@ void LuaBindings::bindCommonFunctions(const std::vector<sol::state*> &luaStates)
                 if (targetValue && !targetValue.value().empty()) target = targetValue.value();
             }
             return OreFeatureRegistry::registerOre(modId, oreId, block, size, target, dimension, yMin, yMax, count);
+        });
+
+        lua->set_function("registerTreeFeature", [](sol::this_environment env, const std::string &treeId, const std::string &shape, sol::optional<sol::object> options) -> bool
+        {
+            sol::environment& modEnv = env;
+            std::string modId = modEnv["modId"];
+
+            std::string trunk, leaves, biome;
+            int count = 1, height = 0;
+
+            if (options.has_value() && options->valid() && options->is<sol::table>())
+            {
+                sol::table t = options->as<sol::table>();
+
+                sol::optional<std::string> trunkValue = t["trunk"];
+                if (trunkValue && !trunkValue.value().empty()) trunk = trunkValue.value();
+
+                sol::optional<std::string> leavesValue = t["leaves"];
+                if (leavesValue && !leavesValue.value().empty()) leaves = leavesValue.value();
+
+                sol::optional<std::string> biomeValue = t["biome"];
+                if (biomeValue && !biomeValue.value().empty()) biome = biomeValue.value();
+
+                sol::optional<int> countValue = t["count"];
+                if (countValue && countValue.value() > 0) count = countValue.value();
+
+                sol::optional<int> heightValue = t["height"];
+                if (heightValue && heightValue.value() > 0) height = heightValue.value();
+            }
+            return TreeFeatureRegistry::registerTree(modId, treeId, shape, trunk, leaves, biome, count, height);
         });
     }
 }
@@ -464,8 +496,7 @@ void LuaBindings::bindServerFunctions(sol::state& lua, MinecraftServer* server) 
         }
     );
 
-    lua.new_usertype<CommandSender>("CommandSender",
-        "hasPermission", &CommandSender::hasPermission
+    lua.new_usertype<CommandSender>("CommandSender", "hasPermission", &CommandSender::hasPermission
     );
 
     lua.new_usertype<Player>("Player",
@@ -477,8 +508,7 @@ void LuaBindings::bindServerFunctions(sol::state& lua, MinecraftServer* server) 
         sol::base_classes, sol::bases<CommandSender>()
     );
 
-    lua.new_usertype<CommandDispatcher>("CommandDispatcher",
-        "performCommand", &CommandDispatcher::performCommand
+    lua.new_usertype<CommandDispatcher>("CommandDispatcher", "performCommand", &CommandDispatcher::performCommand
     );
 
     lua.new_enum<EGameCommand>("EGameCommand", {
@@ -650,6 +680,39 @@ void LuaBindings::bindClientFunctions(sol::state& lua) {
         return registeredBlock;
     });
 
+    lua.set_function("registerSapling", [](sol::this_environment env, const std::string &saplingId, const std::string &name, const std::string &texturePath, sol::optional<sol::object> options, sol::this_state state) -> int {
+        sol::environment& modEnv = env;
+        std::string modId = modEnv["modId"];
+        std::string envPath = modEnv["pathName"];
+        std::wstring path = std::wstring(envPath.begin(), envPath.end());
+
+        std::string shape = "oak", trunk, leaves;
+        int height = 0;
+        if (options.has_value() && options->valid() && options->is<sol::table>())
+        {
+            sol::table t = options->as<sol::table>();
+
+            sol::optional<std::string> shapeValue = t["shape"];
+            if (shapeValue && !shapeValue.value().empty()) shape = shapeValue.value();
+
+            sol::optional<std::string> trunkValue = t["trunk"];
+            if (trunkValue && !trunkValue.value().empty()) trunk = trunkValue.value();
+
+            sol::optional<std::string> leavesValue = t["leaves"];
+            if (leavesValue && !leavesValue.value().empty()) leaves = leavesValue.value();
+
+            sol::optional<int> heightValue = t["height"];
+            if (heightValue && heightValue.value() > 0) height = heightValue.value();
+        }
+
+        int registered = SaplingRegistry::registerSapling(modId, saplingId, name, path, texturePath, shape, trunk, leaves, height);
+        if (registered == -1) {
+            RubyUtils::LuaException(state, "registerSapling: failed to register '" + saplingId + "' (bad shape, unknown trunk/leaves block, or the block registry limit was reached)");
+            return -1;
+        }
+        return registered;
+    });
+
     lua.new_enum<RecipeRegistry::Group>("ERecipeGroup", {
         {"Structure",  Recipy::eGroupType_Structure},
         {"Tool",       Recipy::eGroupType_Tool},
@@ -717,12 +780,10 @@ void LuaBindings::bindClientFunctions(sol::state& lua) {
             sol::optional<float> xpValue = table["xp"];
             if (xpValue && xpValue.value() >= 0.0f) xp = xpValue.value();
         }
-
         return RecipeRegistry::registerSmelting(modId, recipeId, input, result, count, xp);
     });
 
-    lua.set_function("registerItemTier", [](sol::this_environment env, const std::string &tierId,
-        sol::optional<sol::object> options) -> int
+    lua.set_function("registerItemTier", [](sol::this_environment env, const std::string &tierId, sol::optional<sol::object> options) -> int
     {
         sol::environment& modEnv = env;
         std::string modId = modEnv["modId"];
@@ -740,8 +801,7 @@ void LuaBindings::bindClientFunctions(sol::state& lua) {
         return TierRegistry::registerTier(modId, tierId, level, uses, speed, damage, ench);
     });
 
-    lua.set_function("registerArmorMaterial", [](sol::this_environment env, const std::string &materialId,
-        sol::optional<sol::object> options) -> int
+    lua.set_function("registerArmorMaterial", [](sol::this_environment env, const std::string &materialId, sol::optional<sol::object> options) -> int
     {
         sol::environment& modEnv = env;
         std::string modId = modEnv["modId"];
@@ -758,5 +818,4 @@ void LuaBindings::bindClientFunctions(sol::state& lua) {
         }
         return ArmorMaterialRegistry::registerMaterial(modId, materialId, durabilityMultiplier, head, torso, legs, feet, ench);
     });
-
 }

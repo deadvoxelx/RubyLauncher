@@ -27,6 +27,7 @@ enum RubyCreativeGroup
 	RubyCreativeGroup_Materials,
 	RubyCreativeGroup_Food,
 	RubyCreativeGroup_Tools,
+	RubyCreativeGroup_Decoration,
 };
 
 struct RubyCreativeEntry

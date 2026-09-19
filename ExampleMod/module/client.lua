@@ -36,7 +36,8 @@ function main()
 			{
 				hardness = 5.0,
 				resistance = 15.0,
-				tool = EBlockTool.Pickaxe
+				tool = EBlockTool.Pickaxe,
+				sound = "metal"
 			}
 		)
 	)
@@ -50,12 +51,77 @@ function main()
 			{
 				hardness = 3.0,
 				resistance = 10.0,
-				tool = EBlockTool.Pickaxe
+				tool = EBlockTool.Pickaxe,
+				sound = "stone"
 			}
 		)
 	)
     log("Steel Mod: registered steelOre as id " .. tostring(steelOreId))
 	
+	local steelLogId = registerBlock
+	(
+		"steelLog", "Steel Log", "res/steel_log.png",
+		BlockDefinition.new
+		(
+			{
+				hardness = 2.0,
+				resistance = 5.0,
+				tool = EBlockTool.Hatchet,
+				sound = "wood",
+				topTexture = "res/steel_log_top.png",		-- Top texture
+				bottomTexture = "res/steel_log_top.png"		-- Bottom texture
+			}
+		)
+	)
+    log("Steel Mod: registered steelLog as id " .. tostring(steelLogId))
+	
+	local steelLeavesId = registerBlock
+	(
+		"steelLeaves", "Steel Leaves", "res/steel_leaves.png",
+		BlockDefinition.new
+		(
+			{
+				transparent = true,							-- Transparency; if missing, defaults to false
+				hardness = 0.5,
+				resistance = 0.0,
+				tool = EBlockTool.Hoe,
+				sound = "grass",
+				drop = "steelMod:steelSapling",  			-- Drop
+				--dropNothing = true,  						-- Use this to make blocks drop nothing
+    			dropMin = 0, dropMax = 1,      				-- Min + max
+    			dropChance = 0.2             				-- Chance
+			}
+		)
+	)
+    log("Steel Mod: registered steelLeaves as id " .. tostring(steelLeavesId))
+
+	local steelSaplingId = registerSapling
+	(
+		"steelSapling", "Steel Sapling", "res/steel_sapling.png",
+		{
+			shape = "oak",						-- Tree shape (oak, spruce, birch, hugeJungle, swamp)
+			trunk = "steelMod:steelLog",					-- Log
+			leaves = "steelMod:steelLeaves",				-- Leaves
+			height = 6										-- Base height
+		}
+	)
+    log("Steel Mod: registered steelSapling as id " .. tostring(steelSaplingId))
+	
+	local steelPlanksId = registerBlock
+	(
+		"steelPlanks", "Steel Planks", "res/steel_planks.png",
+		BlockDefinition.new
+		(
+			{
+				hardness = 2.0,
+				resistance = 5.0,
+				tool = EBlockTool.Hatchet,
+				sound = "wood"
+			}
+		)
+	)
+    log("Steel Mod: registered steelPlanks as id " .. tostring(steelPlanksId))
+
 	-- Basic Items
     local steelIngotId = registerItem
 	(
@@ -72,22 +138,6 @@ function main()
 
 	-- Foods
 	-- saturationMod guideline: 0.1 poor, 0.3 low, 0.6 normal, 0.8 good, 1.0 max, 1.2 supernatural
-	local pearId = registerItem
-	(
-		"pear", "Pear", "res/pear.png", 
-		ItemDefinition.new
-		(
-			{
-				base = EBaseItem.Food_Fruit,
-				nutrition = 4,
-				saturationMod = 0.3,
-				isMeat = false,
-				canAlwaysEat = true
-			}
-		)
-	)
-	log("Steel Mod: registered pear as id " .. tostring(pearId))
-
 	local steelAppleId = registerItem
 	(
 		"steelApple", "Steel Apple", "res/steel_apple.png", 
@@ -242,6 +292,14 @@ function main()
 		{ "steelMod:steelBlock" }, 							-- Ingredient
 		"steelMod:steelIngot", 								-- Result
 		{ count = 9, group = ERecipeGroup.Decoration }		-- Count and group
+	)
+	
+	registerShapelessRecipe
+	(
+		"steelPlanksRecipe",
+		{ "steelMod:steelLog" },
+		"steelMod:steelPlanks",
+		{ count = 4, group = ERecipeGroup.Decoration }
 	)
 
 	registerShapedRecipe

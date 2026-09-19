@@ -1,4 +1,5 @@
 -- Server scripts run when a world is hosted; this is where event listeners are registered
+-- Worldgen stuff is also done here
 function main()
     registerEvent
 	(	-- Fires on player join
@@ -36,6 +37,20 @@ function main()
 			dimension = 0,								-- Dimension (-999 for all)
 			yMin = 0, yMax = 64,						-- Min + max y
 			count = 8,									-- Average veins per chunk
+		}
+	)
+
+	-- Tree Features
+	registerTreeFeature
+	(
+		"steelTreeFeature",								-- Feature ID
+		"oak",									-- Tree shape (oak, spruce, birch, hugeJungle, swamp)
+		{
+			trunk = "steelMod:steelLog",				-- Log
+			leaves = "steelMod:steelLeaves",			-- Leaves
+			biome = "minecraft:forest",					-- Biome
+			count = 1,									-- Average trees per chunk
+			height = 7,									-- Base height
 		}
 	)
 end

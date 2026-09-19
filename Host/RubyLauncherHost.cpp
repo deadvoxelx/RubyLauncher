@@ -4,7 +4,9 @@
 #include "Registry/IDs.h"
 #include "Registry/Item/ItemRegistry.h"
 #include "Registry/Recipe/RecipeRegistry.h"
+#include "Registry/Block/BlockRegistry.h"
 #include "Registry/WorldGen/OreFeatureRegistry.h"
+#include "Registry/WorldGen/TreeFeatureRegistry.h"
 
 #include "Common/EventSystem/EventBus.h"
 #include "Common/ModPaths.h"
@@ -160,6 +162,7 @@ void RubyLoader::onClientBoot()
 	onStringTableReloaded();
 
 	RecipeRegistry::finalize();
+	BlockRegistry::finalizeDrops();
 }
 
 void RubyLoader::onStringTableReloaded()
@@ -175,12 +178,14 @@ void RubyLoader::onServerStart(MinecraftServer *server)
 
 	EventBus::Get().clearListeners();
 	OreFeatureRegistry::reset();
+	TreeFeatureRegistry::reset();
 
 	g_loader->registerServerFunctions(server);
 	g_loader->refreshServerScripts();
 	g_loader->executeServerScripts("main");
 
 	OreFeatureRegistry::finalize();
+	TreeFeatureRegistry::finalize();
 }
 
 int RubyLoader::getModCount()
